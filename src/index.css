@@ -112,3 +112,20 @@
 .animate-neon-pulse {
   animation: neon-pulse 1.8s infinite ease-in-out;
 }
+
+/* Print optimizations for Certificate of Achievement */
+@media print {
+  body {
+    background: #ffffff !important;
+    color: #0f172a !important;
+  }
+
+  .certificate-print-root {
+    box-shadow: none !important;
+    border-width: 6px !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    margin: 0 auto !important;
+    page-break-inside: avoid !important;
+  }
+}

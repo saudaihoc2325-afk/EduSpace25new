@@ -60,15 +60,12 @@ export const CertificateModal: React.FC<CertificateModalProps> = ({
   };
 
   const getHonorTitle = (percentage: number) => {
-    if (percentage >= 95) return 'EXCELLENCE WITH HIGHEST HONORS';
-    if (percentage >= 85) return 'HIGH ACADEMIC DISTINCTION';
+    if (percentage >= 90) return 'CERTIFICATE OF EXCELLENCE';
     return 'CERTIFICATE OF ACHIEVEMENT';
   };
 
   const getHonorTitleVi = (percentage: number) => {
-    if (percentage >= 95) return 'GIẤY KHEN THÀNH TÍCH XUẤT SẮC HẠNG TỐI ƯU';
-    if (percentage >= 85) return 'CHỨNG NHẬN THÀNH TÍCH HỌC TẬP XUẤT SẮC';
-    return 'GIẤY CHỨNG NHẬN HOÀN THÀNH XUẤT SẮC';
+    return 'GIẤY KHEN THÀNH TÍCH XUẤT SẮC';
   };
 
   return (
@@ -132,33 +129,41 @@ export const CertificateModal: React.FC<CertificateModalProps> = ({
 
             {/* Header / Seal */}
             <div className="text-center relative z-10 space-y-2">
-              <div className="inline-flex items-center justify-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-900 text-[10px] font-extrabold uppercase tracking-widest mb-1">
+              <div className="inline-flex items-center justify-center gap-1.5 px-3.5 py-1 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-950 text-[10px] font-extrabold uppercase tracking-wider mb-1">
                 <Sparkles className="w-3 h-3 text-amber-600" />
                 <span>{ORG_NAME} • HIGH SCHOOL ENGLISH HUB</span>
               </div>
 
-              <h1 className="text-xl sm:text-3xl font-serif font-black tracking-wider text-amber-950 uppercase drop-shadow-xs">
+              {/* Fixed Vietnamese Title - Normal tracking prevents glyph detachment */}
+              <h1
+                className="text-xl sm:text-2xl md:text-3xl font-display font-black text-amber-950 uppercase text-center leading-snug px-2 drop-shadow-xs"
+                style={{ letterSpacing: '0px', wordBreak: 'keep-all', overflowWrap: 'break-word' }}
+              >
                 {getHonorTitleVi(data.percentage)}
               </h1>
-              <p className="text-[10px] sm:text-xs font-mono font-bold tracking-widest text-amber-800 uppercase">
+              
+              <p className="text-[10px] sm:text-xs font-mono font-bold tracking-wider text-amber-800 uppercase">
                 {getHonorTitle(data.percentage)}
               </p>
 
-              <div className="w-24 h-0.5 bg-gradient-to-r from-transparent via-amber-600 to-transparent mx-auto mt-2" />
+              <div className="w-28 h-0.5 bg-gradient-to-r from-transparent via-amber-600 to-transparent mx-auto mt-2" />
             </div>
 
             {/* Presentation Body */}
             <div className="text-center my-6 sm:my-8 relative z-10 space-y-3">
-              <p className="text-xs sm:text-sm text-slate-600 font-serif italic">
+              <p className="text-xs sm:text-sm text-slate-600 font-medium italic">
                 Trân trọng trao tặng cho học sinh (Proudly presented to):
               </p>
 
               <div className="py-2">
-                <div className="text-2xl sm:text-4xl font-serif font-black text-indigo-950 tracking-wide border-b-2 border-amber-400/80 inline-block px-6 pb-1">
+                <div
+                  className="text-2xl sm:text-3xl md:text-4xl font-display font-black text-indigo-950 border-b-2 border-amber-400/80 inline-block px-6 pb-1"
+                  style={{ letterSpacing: '0px' }}
+                >
                   {data.studentName}
                 </div>
-                <div className="text-xs sm:text-sm font-bold text-amber-900 mt-1 font-sans">
-                  Lớp: <strong className="text-indigo-900">{data.studentClass}</strong>
+                <div className="text-xs sm:text-sm font-bold text-amber-900 mt-1.5">
+                  Lớp: <strong className="text-indigo-900 font-extrabold">{data.studentClass}</strong>
                 </div>
               </div>
 
@@ -171,7 +176,7 @@ export const CertificateModal: React.FC<CertificateModalProps> = ({
               </p>
 
               {/* Achievement Badge Box */}
-              <div className="inline-flex flex-wrap items-center justify-center gap-3 sm:gap-6 bg-amber-100/60 border border-amber-300/80 rounded-2xl px-4 py-2 mt-2">
+              <div className="inline-flex flex-wrap items-center justify-center gap-3 sm:gap-6 bg-amber-100/70 border border-amber-300/80 rounded-2xl px-4 py-2 mt-2 shadow-xs">
                 <div className="text-center">
                   <span className="text-[9px] uppercase font-bold text-amber-800 block">Độ chính xác</span>
                   <span className="text-base sm:text-lg font-black font-mono text-emerald-800">
@@ -215,7 +220,7 @@ export const CertificateModal: React.FC<CertificateModalProps> = ({
                 <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-gradient-to-tr from-amber-600 via-amber-400 to-amber-500 text-white shadow-md border-2 border-white mb-1">
                   <Star className="w-6 h-6 fill-white" />
                 </div>
-                <p className="text-[11px] font-serif font-bold text-indigo-950 uppercase">
+                <p className="text-[11px] font-display font-bold text-indigo-950 uppercase">
                   Ban Học Thuật EduSpace25
                 </p>
                 <p className="text-[9px] text-slate-500 italic">
