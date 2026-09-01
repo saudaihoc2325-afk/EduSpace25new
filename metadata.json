@@ -1,0 +1,6 @@
+{
+  "name": "EduSpace25",
+  "description": "Interactive educational game platform for English teachers and high-school students (Grades 10-12) by ENGLISH GROUP.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

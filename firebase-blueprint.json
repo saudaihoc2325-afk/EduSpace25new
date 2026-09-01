@@ -1,0 +1,159 @@
+{
+  "rules": {
+    "users": {
+      "uid": {
+        "definition": {
+          "type": "object",
+          "properties": {
+            "uid": { "type": "string" },
+            "displayName": { "type": "string" },
+            "email": { "type": "string" },
+            "role": { "type": "string" },
+            "organizationName": { "type": "string" },
+            "schoolYear": { "type": "string" },
+            "defaultGrade": { "type": "string" },
+            "createdAt": { "type": "string" },
+            "updatedAt": { "type": "string" }
+          },
+          "required": ["uid", "email", "role"]
+        },
+        "description": "User profile document indexed by Firebase Auth UID"
+      }
+    },
+    "folders": {
+      "id": {
+        "definition": {
+          "type": "object",
+          "properties": {
+            "id": { "type": "string" },
+            "name": { "type": "string" },
+            "ownerId": { "type": "string" },
+            "color": { "type": "string" },
+            "description": { "type": "string" },
+            "parentId": { "type": ["string", "null"] },
+            "createdAt": { "type": "string" },
+            "updatedAt": { "type": "string" }
+          },
+          "required": ["name", "ownerId"]
+        },
+        "description": "Teacher organizational folders"
+      }
+    },
+    "questionSets": {
+      "id": {
+        "definition": {
+          "type": "object",
+          "properties": {
+            "id": { "type": "string" },
+            "ownerId": { "type": "string" },
+            "title": { "type": "string" },
+            "description": { "type": "string" },
+            "gradeLevel": { "type": "string" },
+            "questions": { "type": "array" },
+            "createdAt": { "type": "string" },
+            "updatedAt": { "type": "string" }
+          },
+          "required": ["title", "ownerId", "questions"]
+        },
+        "description": "Question banks containing items, choices, and explanations"
+      }
+    },
+    "activities": {
+      "id": {
+        "definition": {
+          "type": "object",
+          "properties": {
+            "id": { "type": "string" },
+            "ownerId": { "type": "string" },
+            "title": { "type": "string" },
+            "description": { "type": "string" },
+            "gameType": { "type": "string" },
+            "questionSetId": { "type": "string" },
+            "folderId": { "type": ["string", "null"] },
+            "status": { "type": "string" },
+            "itemCount": { "type": "number" },
+            "createdAt": { "type": "string" },
+            "updatedAt": { "type": "string" }
+          },
+          "required": ["title", "ownerId", "gameType", "questionSetId"]
+        },
+        "description": "Interactive learning game activity referencing question sets"
+      }
+    },
+    "assignments": {
+      "id": {
+        "definition": {
+          "type": "object",
+          "properties": {
+            "id": { "type": "string" },
+            "ownerId": { "type": "string" },
+            "activityId": { "type": "string" },
+            "activityTitle": { "type": "string" },
+            "gameType": { "type": "string" },
+            "assignmentCode": { "type": "string" },
+            "studentLink": { "type": "string" },
+            "status": { "type": "string" },
+            "targetClass": { "type": "string" },
+            "startDate": { "type": "string" },
+            "endDate": { "type": "string" },
+            "maxAttempts": { "type": "number" },
+            "allowRetry": { "type": "boolean" },
+            "showAnswersAfter": { "type": "boolean" },
+            "timeLimitMinutes": { "type": "number" },
+            "totalSubmissions": { "type": "number" },
+            "createdAt": { "type": "string" },
+            "updatedAt": { "type": "string" }
+          },
+          "required": ["ownerId", "activityId", "assignmentCode", "status"]
+        },
+        "description": "Teacher published game assignments shared via 6-digit code or link"
+      }
+    },
+    "students": {
+      "id": {
+        "definition": {
+          "type": "object",
+          "properties": {
+            "id": { "type": "string" },
+            "ownerId": { "type": "string" },
+            "name": { "type": "string" },
+            "className": { "type": "string" },
+            "assignmentsCompleted": { "type": "number" },
+            "averageScore": { "type": "number" },
+            "createdAt": { "type": "string" },
+            "updatedAt": { "type": "string" },
+            "lastActivityAt": { "type": "string" }
+          },
+          "required": ["name", "className", "ownerId"]
+        },
+        "description": "Class student roster records"
+      }
+    },
+    "results": {
+      "id": {
+        "definition": {
+          "type": "object",
+          "properties": {
+            "id": { "type": "string" },
+            "assignmentId": { "type": "string" },
+            "assignmentCode": { "type": "string" },
+            "activityId": { "type": "string" },
+            "activityTitle": { "type": "string" },
+            "teacherOwnerId": { "type": "string" },
+            "studentName": { "type": "string" },
+            "studentClass": { "type": "string" },
+            "score": { "type": "number" },
+            "totalQuestions": { "type": "number" },
+            "percentage": { "type": "number" },
+            "answers": { "type": "array" },
+            "timeSpentSeconds": { "type": "number" },
+            "completedAt": { "type": "string" },
+            "createdAt": { "type": "string" }
+          },
+          "required": ["assignmentCode", "studentName", "studentClass", "score", "totalQuestions"]
+        },
+        "description": "Student assignment submission results and question answer logs"
+      }
+    }
+  }
+}

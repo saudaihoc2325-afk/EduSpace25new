@@ -1,0 +1,47 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // 1. Users collection
+    match /users/{userId} {
+      allow read, write: if true;
+    }
+
+    // 2. Folders collection
+    match /folders/{folderId} {
+      allow read, write: if true;
+    }
+
+    // 3. Question Sets collection (Question Bank)
+    match /questionSets/{questionSetId} {
+      allow read, write: if true;
+    }
+
+    // 4. Activities collection
+    match /activities/{activityId} {
+      allow read, write: if true;
+    }
+
+    // 5. Assignments collection
+    match /assignments/{assignmentId} {
+      allow read, write: if true;
+    }
+
+    // 6. Students collection
+    match /students/{studentId} {
+      allow read, write: if true;
+    }
+
+    // 7. Results collection
+    match /results/{resultId} {
+      allow read, write: if true;
+    }
+
+    // 8. Import History collection
+    match /importHistory/{historyId} {
+      allow read, write: if true;
+    }
+  }
+}
+
+
