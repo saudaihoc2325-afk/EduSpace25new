@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Settings,
   Building,
@@ -13,8 +13,13 @@ import {
   Loader2,
   Cloud,
   Check,
+  Users,
+  Plus,
+  Trash2,
+  FolderPlus,
+  Sparkles,
 } from 'lucide-react';
-import { TeacherProfile } from '../../types';
+import { ClassItem, GradeLevel, TeacherProfile } from '../../types';
 import { ORG_NAME, APP_NAME } from '../../constants/gameTypes';
 import { Card } from '../ui/Card';
 import { Button } from '../ui/Button';
@@ -23,6 +28,7 @@ import { Select } from '../ui/Select';
 import { Badge } from '../ui/Badge';
 import { useToast } from '../../context/ToastContext';
 import { useAuth } from '../../context/AuthContext';
+import { classService } from '../../services/firestoreService';
 
 interface SettingsViewProps {
   profile: TeacherProfile | null;
@@ -44,6 +50,80 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   const [defaultGrade, setDefaultGrade] = useState(profile?.defaultGrade || '10');
   const [isSaving, setIsSaving] = useState(false);
   const [isAuthenticating, setIsAuthenticating] = useState(false);
+
+  // Dynamic Class Management State
+  const [savedClasses, setSavedClasses] = useState<ClassItem[]>([]);
+  const [newClassName, setNewClassName] = useState('');
+  const [newClassGrade, setNewClassGrade] = useState<GradeLevel>('10');
+  const [isSavingClass, setIsSavingClass] = useState(false);
+  const [deletingClassId, setDeletingClassId] = useState<string | null>(null);
+  const [isDeletingAll, setIsDeletingAll] = useState(false);
+
+  const teacherOwnerId = user?.uid || profile?.ownerId || 'teacher_default';
+
+  useEffect(() => {
+    const unsub = classService.subscribeClasses(teacherOwnerId, (list) => {
+      setSavedClasses(list);
+    });
+    return () => unsub();
+  }, [teacherOwnerId]);
+
+  const handleAddClass = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const clean = newClassName.trim().toUpperCase();
+    if (!clean) {
+      showError('Vui lòng nhập tên lớp học');
+      return;
+    }
+
+    if (savedClasses.some((c) => c.name.toUpperCase() === clean)) {
+      showError(`Lớp "${clean}" đã tồn tại trong danh sách`);
+      return;
+    }
+
+    setIsSavingClass(true);
+    try {
+      await classService.addClass(teacherOwnerId, clean, newClassGrade);
+      setNewClassName('');
+      showSuccess(`Đã tạo lớp ${clean} thành công!`);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Không thể tạo lớp';
+      showError(msg);
+    } finally {
+      setIsSavingClass(false);
+    }
+  };
+
+  const handleDeleteClass = async (cls: ClassItem) => {
+    if (!window.confirm(`Bạn có chắc muốn xóa lớp "${cls.name}" khỏi hệ thống?`)) return;
+
+    setDeletingClassId(cls.id);
+    try {
+      await classService.deleteClass(cls.id);
+      showSuccess(`Đã xóa lớp ${cls.name}`);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Không thể xóa lớp';
+      showError(msg);
+    } finally {
+      setDeletingClassId(null);
+    }
+  };
+
+  const handleDeleteAllClasses = async () => {
+    if (savedClasses.length === 0) return;
+    if (!window.confirm(`Bạn có chắc muốn xóa TẤT CẢ (${savedClasses.length}) lớp học?`)) return;
+
+    setIsDeletingAll(true);
+    try {
+      await classService.deleteAllClasses(teacherOwnerId);
+      showSuccess('Đã làm sạch toàn bộ danh sách lớp học!');
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Không thể xóa tất cả lớp';
+      showError(msg);
+    } finally {
+      setIsDeletingAll(false);
+    }
+  };
 
   const handleGoogleSignIn = async () => {
     setIsAuthenticating(true);
@@ -184,6 +264,122 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
           </div>
         </Card>
       </form>
+
+      {/* Target Class Management Card (Dynamic Class Management) */}
+      <Card variant="default" padding="md" className="space-y-4">
+        <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+          <div>
+            <h2 className="text-sm font-bold uppercase tracking-wider text-slate-700 flex items-center gap-2">
+              <Users className="w-4 h-4 text-indigo-600" />
+              Quản lý Lớp học (Target Classes)
+            </h2>
+            <p className="text-xs text-slate-500 mt-0.5">
+              Danh sách lớp học tùy chỉnh của giáo viên được lưu đồng bộ trên Firestore.
+            </p>
+          </div>
+          <div className="flex items-center gap-2">
+            <Badge variant="indigo" size="sm">
+              {savedClasses.length} Lớp đang quản lý
+            </Badge>
+            {savedClasses.length > 0 && (
+              <button
+                type="button"
+                onClick={handleDeleteAllClasses}
+                disabled={isDeletingAll}
+                className="text-xs text-rose-600 hover:text-rose-700 font-semibold hover:underline cursor-pointer"
+              >
+                {isDeletingAll ? 'Đang xóa...' : 'Xóa tất cả lớp'}
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Add Class Inline Form */}
+        <form onSubmit={handleAddClass} className="p-3.5 bg-slate-50 border border-slate-200 rounded-xl space-y-3">
+          <div className="flex items-center gap-2 text-xs font-bold text-slate-800">
+            <FolderPlus className="w-4 h-4 text-indigo-600" />
+            <span>Thêm lớp học mới vào hệ thống</span>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div className="sm:col-span-2">
+              <input
+                type="text"
+                value={newClassName}
+                onChange={(e) => setNewClassName(e.target.value)}
+                placeholder="Tên lớp (ví dụ: 10A1, 11A2, 12D1, CLB Tiếng Anh)..."
+                className="w-full text-xs h-9 px-3 rounded-lg border border-slate-300 bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 font-bold uppercase"
+              />
+            </div>
+            <div className="flex items-center gap-2">
+              <select
+                value={newClassGrade}
+                onChange={(e) => setNewClassGrade(e.target.value as GradeLevel)}
+                className="flex-1 text-xs h-9 px-2 rounded-lg border border-slate-300 bg-white text-slate-800 focus:outline-none"
+              >
+                <option value="10">Khối 10</option>
+                <option value="11">Khối 11</option>
+                <option value="12">Khối 12</option>
+                <option value="All Grades">Khối Chung</option>
+              </select>
+              <Button
+                type="submit"
+                variant="primary"
+                size="sm"
+                disabled={isSavingClass || !newClassName.trim()}
+                icon={isSavingClass ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Plus className="w-3.5 h-3.5" />}
+                className="h-9 px-3 rounded-lg shrink-0"
+              >
+                {isSavingClass ? 'Lưu...' : 'Thêm lớp'}
+              </Button>
+            </div>
+          </div>
+        </form>
+
+        {/* List of saved classes */}
+        {savedClasses.length === 0 ? (
+          <div className="p-6 text-center rounded-xl border border-dashed border-slate-200 bg-slate-50/50">
+            <Users className="w-8 h-8 text-slate-300 mx-auto mb-2" />
+            <p className="text-xs font-semibold text-slate-600">Chưa có lớp học tùy chỉnh nào</p>
+            <p className="text-[11px] text-slate-400 mt-0.5">
+              Hệ thống không còn dùng danh sách lớp mặc định. Hãy thêm tên lớp học của bạn ở trên để gán bài tập cho từng lớp.
+            </p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
+            {savedClasses.map((cls) => (
+              <div
+                key={cls.id}
+                className="flex items-center justify-between p-3 rounded-xl bg-white border border-slate-200 hover:border-slate-300 transition-colors shadow-2xs"
+              >
+                <div className="flex items-center gap-2 min-w-0">
+                  <div className="w-8 h-8 rounded-lg bg-indigo-50 border border-indigo-100 text-indigo-700 flex items-center justify-center font-bold text-xs shrink-0">
+                    {cls.name.slice(0, 3)}
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-xs font-bold text-slate-900 truncate">{cls.name}</p>
+                    <p className="text-[10px] text-slate-500">
+                      {cls.gradeLevel && cls.gradeLevel !== 'All Grades' ? `Khối ${cls.gradeLevel}` : 'Chung'}
+                    </p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => handleDeleteClass(cls)}
+                  disabled={deletingClassId === cls.id}
+                  className="p-1.5 rounded-lg text-rose-500 hover:bg-rose-50 hover:text-rose-700 transition-colors cursor-pointer"
+                  title="Xóa lớp học"
+                >
+                  {deletingClassId === cls.id ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <Trash2 className="w-4 h-4" />
+                  )}
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+      </Card>
 
       {/* Google Authentication & Identity Card */}
       <Card variant="default" padding="md" className="space-y-4">

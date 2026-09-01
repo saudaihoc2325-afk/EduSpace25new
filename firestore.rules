@@ -41,6 +41,11 @@ service cloud.firestore {
     match /importHistory/{historyId} {
       allow read, write: if true;
     }
+
+    // 9. Classes collection (Dynamic Teacher Classes)
+    match /classes/{classId} {
+      allow read, write: if true;
+    }
   }
 }
 

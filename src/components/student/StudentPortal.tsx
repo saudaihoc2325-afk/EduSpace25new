@@ -35,6 +35,8 @@ import { Button } from '../ui/Button';
 import { Badge } from '../ui/Badge';
 import { useToast } from '../../context/ToastContext';
 import { GameSessionRunner } from '../games/GameSessionRunner';
+import { CertificateModal } from './CertificateModal';
+import { EncouragementCard } from './EncouragementCard';
 
 interface StudentPortalProps {
   initialCode?: string | null;
@@ -94,6 +96,7 @@ export const StudentPortal: React.FC<StudentPortalProps> = ({
   const [totalQuestionsCount, setTotalQuestionsCount] = useState(0);
   const [answersSummary, setAnswersSummary] = useState<StudentAnswerRecord[]>([]);
   const [isReviewExpanded, setIsReviewExpanded] = useState(false);
+  const [showCertificate, setShowCertificate] = useState(false);
 
   // Pending submission payload for retry support
   const [pendingPayload, setPendingPayload] = useState<Parameters<typeof resultService.submitStudentResult>[0] | null>(null);
@@ -843,6 +846,44 @@ export const StudentPortal: React.FC<StudentPortalProps> = ({
           <span>{performance.label}</span>
         </div>
 
+        {/* Certificate of Achievement for High Achievers (>= 75%) */}
+        {finalPercentage >= 75 && (
+          <div className="bg-gradient-to-r from-amber-500/20 via-yellow-500/15 to-amber-500/20 border-2 border-amber-500/40 rounded-3xl p-4 sm:p-5 text-center shadow-[0_0_25px_rgba(245,158,11,0.25)] space-y-3 relative overflow-hidden animate-in zoom-in-95 duration-300">
+            <div className="flex items-center justify-center gap-2">
+              <Award className="w-6 h-6 text-amber-400 animate-pulse" />
+              <span className="text-xs sm:text-sm font-extrabold text-amber-300 uppercase tracking-wider font-display">
+                Vinh Danh Thành Tích Xuất Sắc
+              </span>
+            </div>
+            <p className="text-xs text-amber-100/90 leading-relaxed">
+              Bạn đã hoàn thành xuất sắc bài tập với độ chính xác <strong className="text-amber-300 font-mono text-sm">{finalPercentage}%</strong>! Giấy chứng nhận vinh danh của bạn đã sẵn sàng.
+            </p>
+            <Button
+              id="btn-open-certificate"
+              variant="primary"
+              size="md"
+              icon={<Award className="w-4 h-4 text-slate-950" />}
+              onClick={() => setShowCertificate(true)}
+              className="bg-gradient-to-r from-amber-400 via-amber-300 to-amber-500 hover:from-amber-300 hover:to-amber-400 text-slate-950 font-black shadow-lg shadow-amber-500/30 text-xs sm:text-sm px-6 py-2.5 rounded-2xl cursor-pointer"
+            >
+              🏆 Xem & In Giấy Khen Vinh Danh
+            </Button>
+          </div>
+        )}
+
+        {/* Encouragement Card for Students Needing Improvement (< 70%) */}
+        {finalPercentage < 70 && (
+          <EncouragementCard
+            studentName={studentName}
+            percentage={finalPercentage}
+            correctCount={correctCount}
+            totalQuestions={totalQuestionsCount}
+            onReviewAnswers={() => setIsReviewExpanded(true)}
+            onPlayAgain={canPlayAgain ? handlePlayAgain : undefined}
+            canPlayAgain={canPlayAgain}
+          />
+        )}
+
         {/* Metrics Grid */}
         {showScoreConfig && (
           <div className="grid grid-cols-3 gap-2.5 sm:gap-3 bg-slate-900/90 border border-slate-800 rounded-3xl p-3 sm:p-4">
@@ -1019,6 +1060,22 @@ export const StudentPortal: React.FC<StudentPortalProps> = ({
       <footer className="text-center text-xs text-slate-500">
         EduSpace25 • ENGLISH GROUP
       </footer>
+
+      {showCertificate && (
+        <CertificateModal
+          data={{
+            studentName,
+            studentClass,
+            activityTitle: activeAssignment?.title || activeActivity?.title || 'Interactive English Activity',
+            score: finalScore,
+            totalQuestions: totalQuestionsCount,
+            percentage: finalPercentage,
+            completedAt: new Date().toISOString(),
+            assignmentCode: activeAssignment?.code || enteredCode,
+          }}
+          onClose={() => setShowCertificate(false)}
+        />
+      )}
     </div>
   );
 };

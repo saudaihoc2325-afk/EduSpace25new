@@ -20,6 +20,7 @@ import { StudentPerformanceSummary } from '../../../utils/analyticsUtils';
 import { Card } from '../../ui/Card';
 import { Button } from '../../ui/Button';
 import { Badge } from '../../ui/Badge';
+import { CertificateModal } from '../../student/CertificateModal';
 
 interface StudentDetailModalProps {
   summary: StudentPerformanceSummary;
@@ -31,6 +32,7 @@ export const StudentDetailModal: React.FC<StudentDetailModalProps> = ({
   onClose,
 }) => {
   const [selectedAttemptIndex, setSelectedAttemptIndex] = useState(0);
+  const [showCertificate, setShowCertificate] = useState(false);
 
   const activeAttempt: StudentResult | undefined = summary.attempts[selectedAttemptIndex] || summary.attempts[0];
 
@@ -266,12 +268,39 @@ export const StudentDetailModal: React.FC<StudentDetailModalProps> = ({
         </div>
 
         {/* Modal Footer */}
-        <div className="p-4 bg-slate-50 border-t border-slate-200 flex items-center justify-end">
+        <div className="p-4 bg-slate-50 border-t border-slate-200 flex items-center justify-between gap-3">
+          <Button
+            id="btn-teacher-print-cert"
+            variant="outline"
+            size="sm"
+            icon={<Award className="w-4 h-4 text-amber-600" />}
+            onClick={() => setShowCertificate(true)}
+            className="border-amber-400/80 bg-amber-50 hover:bg-amber-100 text-amber-950 font-bold rounded-xl text-xs"
+          >
+            🏆 Cấp & In Giấy Khen ({activeAttempt?.percentage || summary.bestPercentage}%)
+          </Button>
+
           <Button variant="outline" size="sm" onClick={onClose} className="rounded-xl">
             Đóng
           </Button>
         </div>
       </div>
+
+      {showCertificate && activeAttempt && (
+        <CertificateModal
+          data={{
+            studentName: summary.studentName,
+            studentClass: summary.studentClass,
+            activityTitle: activeAttempt.activityTitle || 'Bài tập tiếng Anh EduSpace25',
+            score: activeAttempt.score,
+            totalQuestions: activeAttempt.totalQuestions || totalQ,
+            percentage: activeAttempt.percentage,
+            completedAt: activeAttempt.completedAt,
+            assignmentCode: activeAttempt.assignmentCode,
+          }}
+          onClose={() => setShowCertificate(false)}
+        />
+      )}
     </div>
   );
 };

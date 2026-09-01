@@ -44,6 +44,7 @@ import { StudentPortal } from './components/student/StudentPortal';
 import { ActivityPlayModal } from './components/teacher/ActivityPlayModal';
 import { AssignModal } from './components/teacher/AssignModal';
 import { LoadingState } from './components/ui/LoadingState';
+import { FireworksCanvas } from './components/effects/FireworksCanvas';
 
 function MainApp() {
   const { showSuccess, showError } = useToast();
@@ -573,6 +574,9 @@ function MainApp() {
           onLaunchStudentView={handleLaunchStudentForCode}
         />
       )}
+
+      {/* Global Fireworks Particle Engine */}
+      <FireworksCanvas />
     </div>
   );
 }

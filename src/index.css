@@ -19,9 +19,96 @@
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
+  background: #334155;
   border-radius: 9999px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
+  background: #475569;
+}
+
+/* ----------------------------------------------------
+   3D NEON DESIGN SYSTEM & INTERACTIVE EFFECTS
+---------------------------------------------------- */
+
+/* 3D Surface with glass highlights and neon bezel */
+.card-3d-neon {
+  background: linear-gradient(135deg, rgba(30, 41, 59, 0.85) 0%, rgba(15, 23, 42, 0.95) 100%);
+  border: 1px solid rgba(99, 102, 241, 0.25);
+  box-shadow: 
+    inset 0 1px 1px rgba(255, 255, 255, 0.12),
+    0 4px 0 rgba(15, 23, 42, 0.9),
+    0 12px 28px rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(16px);
+  border-radius: 1.25rem;
+}
+
+/* 3D Pushable Neon Buttons */
+.btn-3d-neon {
+  position: relative;
+  transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 
+    inset 0 1px 1px rgba(255, 255, 255, 0.25),
+    0 4px 0 rgba(15, 23, 42, 0.8),
+    0 8px 16px rgba(0, 0, 0, 0.35);
+}
+
+.btn-3d-neon:hover {
+  transform: translateY(-2px);
+  box-shadow: 
+    inset 0 1px 1px rgba(255, 255, 255, 0.3),
+    0 6px 0 rgba(15, 23, 42, 0.8),
+    0 12px 24px rgba(99, 102, 241, 0.3);
+}
+
+.btn-3d-neon:active {
+  transform: translateY(2px);
+  box-shadow: 
+    inset 0 1px 1px rgba(255, 255, 255, 0.1),
+    0 2px 0 rgba(15, 23, 42, 0.8),
+    0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+/* Vibrant Neon Glow Utilities */
+.neon-glow-indigo {
+  box-shadow: 0 0 25px rgba(99, 102, 241, 0.45);
+}
+
+.neon-glow-emerald {
+  box-shadow: 0 0 25px rgba(16, 185, 129, 0.55);
+}
+
+.neon-glow-rose {
+  box-shadow: 0 0 25px rgba(244, 63, 94, 0.5);
+}
+
+.neon-glow-amber {
+  box-shadow: 0 0 25px rgba(245, 158, 11, 0.5);
+}
+
+.neon-glow-cyan {
+  box-shadow: 0 0 25px rgba(6, 182, 212, 0.5);
+}
+
+.neon-glow-purple {
+  box-shadow: 0 0 25px rgba(168, 85, 247, 0.5);
+}
+
+/* Subtle Shakes and Pulses */
+@keyframes shake-soft {
+  0%, 100% { transform: translateX(0); }
+  20%, 60% { transform: translateX(-6px); }
+  40%, 80% { transform: translateX(6px); }
+}
+
+.animate-shake {
+  animation: shake-soft 0.35s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+}
+
+@keyframes neon-pulse {
+  0%, 100% { opacity: 0.85; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.02); }
+}
+
+.animate-neon-pulse {
+  animation: neon-pulse 1.8s infinite ease-in-out;
 }

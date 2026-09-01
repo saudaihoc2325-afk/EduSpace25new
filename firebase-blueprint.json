@@ -154,6 +154,24 @@
         },
         "description": "Student assignment submission results and question answer logs"
       }
+    },
+    "classes": {
+      "id": {
+        "definition": {
+          "type": "object",
+          "properties": {
+            "id": { "type": "string" },
+            "ownerId": { "type": "string" },
+            "name": { "type": "string" },
+            "gradeLevel": { "type": "string" },
+            "description": { "type": "string" },
+            "createdAt": { "type": "string" },
+            "updatedAt": { "type": "string" }
+          },
+          "required": ["ownerId", "name"]
+        },
+        "description": "Teacher custom class management records"
+      }
     }
   }
 }

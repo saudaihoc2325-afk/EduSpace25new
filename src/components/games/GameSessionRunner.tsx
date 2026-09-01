@@ -7,6 +7,7 @@ import { OpenTheBoxGame } from './OpenTheBoxGame';
 import { AnagramGame } from './AnagramGame';
 import { GameshowQuizGame } from './GameshowQuizGame';
 import { CompleteSentenceGame } from './CompleteSentenceGame';
+import { FireworksCanvas } from '../effects/FireworksCanvas';
 
 interface GameSessionRunnerProps {
   gameType: GameType;
@@ -69,94 +70,103 @@ export const GameSessionRunner: React.FC<GameSessionRunnerProps> = ({
     );
   }
 
-  switch (gameType) {
-    case 'quiz':
-      return (
-        <QuizGame
-          title={title}
-          questions={activeQuestions}
-          settings={settings}
-          onFinish={onFinish}
-          onExit={onExit}
-          isPreview={isPreview}
-        />
-      );
-    case 'match_up':
-      return (
-        <MatchUpGame
-          title={title}
-          questions={activeQuestions}
-          settings={settings}
-          onFinish={onFinish}
-          onExit={onExit}
-          isPreview={isPreview}
-        />
-      );
-    case 'random_wheel':
-      return (
-        <RandomWheelGame
-          title={title}
-          questions={activeQuestions}
-          settings={settings}
-          onFinish={onFinish}
-          onExit={onExit}
-          isPreview={isPreview}
-        />
-      );
-    case 'open_box':
-      return (
-        <OpenTheBoxGame
-          title={title}
-          questions={activeQuestions}
-          settings={settings}
-          onFinish={onFinish}
-          onExit={onExit}
-          isPreview={isPreview}
-        />
-      );
-    case 'anagram':
-      return (
-        <AnagramGame
-          title={title}
-          questions={activeQuestions}
-          settings={settings}
-          onFinish={onFinish}
-          onExit={onExit}
-          isPreview={isPreview}
-        />
-      );
-    case 'gameshow_quiz':
-      return (
-        <GameshowQuizGame
-          title={title}
-          questions={activeQuestions}
-          settings={settings}
-          onFinish={onFinish}
-          onExit={onExit}
-          isPreview={isPreview}
-        />
-      );
-    case 'complete_sentence':
-      return (
-        <CompleteSentenceGame
-          title={title}
-          questions={activeQuestions}
-          settings={settings}
-          onFinish={onFinish}
-          onExit={onExit}
-          isPreview={isPreview}
-        />
-      );
-    default:
-      return (
-        <QuizGame
-          title={title}
-          questions={activeQuestions}
-          settings={settings}
-          onFinish={onFinish}
-          onExit={onExit}
-          isPreview={isPreview}
-        />
-      );
-  }
+  const renderGameContent = () => {
+    switch (gameType) {
+      case 'quiz':
+        return (
+          <QuizGame
+            title={title}
+            questions={activeQuestions}
+            settings={settings}
+            onFinish={onFinish}
+            onExit={onExit}
+            isPreview={isPreview}
+          />
+        );
+      case 'match_up':
+        return (
+          <MatchUpGame
+            title={title}
+            questions={activeQuestions}
+            settings={settings}
+            onFinish={onFinish}
+            onExit={onExit}
+            isPreview={isPreview}
+          />
+        );
+      case 'random_wheel':
+        return (
+          <RandomWheelGame
+            title={title}
+            questions={activeQuestions}
+            settings={settings}
+            onFinish={onFinish}
+            onExit={onExit}
+            isPreview={isPreview}
+          />
+        );
+      case 'open_box':
+        return (
+          <OpenTheBoxGame
+            title={title}
+            questions={activeQuestions}
+            settings={settings}
+            onFinish={onFinish}
+            onExit={onExit}
+            isPreview={isPreview}
+          />
+        );
+      case 'anagram':
+        return (
+          <AnagramGame
+            title={title}
+            questions={activeQuestions}
+            settings={settings}
+            onFinish={onFinish}
+            onExit={onExit}
+            isPreview={isPreview}
+          />
+        );
+      case 'gameshow_quiz':
+        return (
+          <GameshowQuizGame
+            title={title}
+            questions={activeQuestions}
+            settings={settings}
+            onFinish={onFinish}
+            onExit={onExit}
+            isPreview={isPreview}
+          />
+        );
+      case 'complete_sentence':
+        return (
+          <CompleteSentenceGame
+            title={title}
+            questions={activeQuestions}
+            settings={settings}
+            onFinish={onFinish}
+            onExit={onExit}
+            isPreview={isPreview}
+          />
+        );
+      default:
+        return (
+          <QuizGame
+            title={title}
+            questions={activeQuestions}
+            settings={settings}
+            onFinish={onFinish}
+            onExit={onExit}
+            isPreview={isPreview}
+          />
+        );
+    }
+  };
+
+  return (
+    <>
+      <FireworksCanvas />
+      {renderGameContent()}
+    </>
+  );
 };

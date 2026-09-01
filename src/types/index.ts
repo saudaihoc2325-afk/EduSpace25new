@@ -1,3 +1,13 @@
+export interface ClassItem {
+  id: string;
+  ownerId: string;
+  name: string; // e.g. "10A1", "11B2", "12A5"
+  gradeLevel?: GradeLevel;
+  description?: string;
+  createdAt: string;
+  updatedAt?: string;
+}
+
 export type UserRole = 'teacher' | 'student';
 
 export type GradeLevel = '10' | '11' | '12' | 'All Grades';

@@ -17,7 +17,9 @@ import { db } from './firebase';
 import {
   Activity,
   Assignment,
+  ClassItem,
   Folder,
+  GradeLevel,
   QuestionItem,
   QuestionSet,
   StudentProfile,
@@ -1481,5 +1483,113 @@ export const resultService = {
         if (onError) onError(err);
       }
     );
+  },
+};
+
+// ----------------------------------------------------
+// 6. CLASSES SERVICE (Dynamic Teacher Class Management)
+// ----------------------------------------------------
+export const classService = {
+  subscribeClasses(ownerId: string, onUpdate: (classes: ClassItem[]) => void, onError?: (err: Error) => void) {
+    if (!ownerId) {
+      onUpdate([]);
+      return () => {};
+    }
+    const q = query(
+      collection(db, 'classes'),
+      where('ownerId', '==', ownerId)
+    );
+    return onSnapshot(
+      q,
+      (snapshot) => {
+        const list: ClassItem[] = [];
+        snapshot.forEach((docSnap) => {
+          const data = docSnap.data();
+          list.push({
+            id: docSnap.id,
+            ownerId: data.ownerId,
+            name: data.name,
+            gradeLevel: data.gradeLevel || undefined,
+            description: data.description || '',
+            createdAt: toISO(data.createdAt),
+            updatedAt: toISO(data.updatedAt),
+          });
+        });
+        // Sort alphabetically / natural number sorting by class name
+        list.sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: 'base' }));
+        onUpdate(list);
+      },
+      (err) => {
+        console.error('Firestore classes listener error:', err);
+        if (onError) onError(err);
+      }
+    );
+  },
+
+  async getClasses(ownerId: string): Promise<ClassItem[]> {
+    if (!ownerId) return [];
+    try {
+      const q = query(collection(db, 'classes'), where('ownerId', '==', ownerId));
+      const snapshot = await getDocs(q);
+      const list: ClassItem[] = [];
+      snapshot.forEach((docSnap) => {
+        const data = docSnap.data();
+        list.push({
+          id: docSnap.id,
+          ownerId: data.ownerId,
+          name: data.name,
+          gradeLevel: data.gradeLevel || undefined,
+          description: data.description || '',
+          createdAt: toISO(data.createdAt),
+          updatedAt: toISO(data.updatedAt),
+        });
+      });
+      return list.sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: 'base' }));
+    } catch (e) {
+      console.warn('Error fetching classes:', e);
+      return [];
+    }
+  },
+
+  async addClass(ownerId: string, name: string, gradeLevel?: GradeLevel, description?: string): Promise<ClassItem> {
+    if (!ownerId) throw new Error('Teacher must be authenticated to add a class');
+    const cleanName = name.trim().toUpperCase();
+    if (!cleanName) throw new Error('Class name cannot be empty');
+
+    const classRef = doc(collection(db, 'classes'));
+    const now = new Date().toISOString();
+    const payload = sanitizeForFirestore({
+      ownerId,
+      name: cleanName,
+      gradeLevel: gradeLevel || null,
+      description: description?.trim() || '',
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+    });
+
+    await setDoc(classRef, payload);
+
+    return {
+      id: classRef.id,
+      ownerId,
+      name: cleanName,
+      gradeLevel,
+      description: description?.trim() || '',
+      createdAt: now,
+      updatedAt: now,
+    };
+  },
+
+  async deleteClass(classId: string): Promise<void> {
+    if (!classId) return;
+    await deleteDoc(doc(db, 'classes', classId));
+  },
+
+  async deleteAllClasses(ownerId: string): Promise<void> {
+    if (!ownerId) return;
+    const existing = await this.getClasses(ownerId);
+    for (const item of existing) {
+      await deleteDoc(doc(db, 'classes', item.id));
+    }
   },
 };

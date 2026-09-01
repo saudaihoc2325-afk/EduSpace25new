@@ -59,13 +59,9 @@ export const TeacherHome: React.FC<TeacherHomeProps> = ({
             <span>{ORG_NAME} • HIGH SCHOOL ENGLISH HUB</span>
           </div>
 
-          <h1 className="text-2xl sm:text-3xl font-extrabold font-display tracking-tight text-white mb-2">
+          <h1 className="text-2xl sm:text-3xl font-extrabold font-display tracking-tight text-white mb-5">
             Welcome to EduSpace25
           </h1>
-          <p className="text-slate-300 text-sm sm:text-base leading-relaxed mb-6">
-            Your centralized interactive platform to create grammar & vocabulary game activities,
-            launch 6-digit class assignments, and monitor real-time student mastery.
-          </p>
 
           <div className="flex flex-wrap items-center gap-3">
             <Button

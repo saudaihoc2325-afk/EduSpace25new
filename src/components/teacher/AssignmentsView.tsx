@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Send,
   Plus,
@@ -28,7 +28,7 @@ import {
   Eye,
   FileText,
 } from 'lucide-react';
-import { Activity, Assignment, AssignmentSettings, AssignmentStatus, GameType, QuestionItem } from '../../types';
+import { Activity, Assignment, AssignmentSettings, AssignmentStatus, ClassItem, GameType, QuestionItem } from '../../types';
 import { Card } from '../ui/Card';
 import { Button } from '../ui/Button';
 import { Badge } from '../ui/Badge';
@@ -38,6 +38,7 @@ import { Select } from '../ui/Select';
 import { EmptyState } from '../ui/EmptyState';
 import { useToast } from '../../context/ToastContext';
 import { APP_NAME, ORG_NAME, GAME_TYPES } from '../../constants/gameTypes';
+import { classService } from '../../services/firestoreService';
 import {
   getDirectStudentLink,
   getQrCodeUrl,
@@ -72,13 +73,6 @@ interface AssignmentsViewProps {
   onLaunchStudentView: (code: string) => void;
 }
 
-const COMMON_CLASSES = [
-  'All Classes',
-  '10A1', '10A2', '10A3', '10A4', '10A5',
-  '11A1', '11A2', '11A3', '11A4', '11A5',
-  '12A1', '12A2', '12A3', '12A4', '12A5',
-];
-
 export const AssignmentsView: React.FC<AssignmentsViewProps> = ({
   assignments,
   activities,
@@ -91,6 +85,29 @@ export const AssignmentsView: React.FC<AssignmentsViewProps> = ({
   onLaunchStudentView,
 }) => {
   const { showSuccess, showError, showInfo } = useToast();
+
+  // Dynamic Saved Classes from Teacher Profile
+  const [savedClasses, setSavedClasses] = useState<ClassItem[]>([]);
+  const teacherOwnerId = activities[0]?.ownerId || assignments[0]?.ownerId || 'teacher_default';
+
+  useEffect(() => {
+    const unsub = classService.subscribeClasses(teacherOwnerId, (list) => {
+      setSavedClasses(list);
+    });
+    return () => unsub();
+  }, [teacherOwnerId]);
+
+  // Derive distinct active class names (teacher custom classes + targetClass in assignments)
+  const distinctClasses = React.useMemo(() => {
+    const set = new Set<string>();
+    savedClasses.forEach((c) => set.add(c.name));
+    assignments.forEach((a) => {
+      if (a.targetClass && a.targetClass !== 'All Classes' && a.targetClass !== 'all') {
+        set.add(a.targetClass);
+      }
+    });
+    return Array.from(set).sort((a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }));
+  }, [savedClasses, assignments]);
 
   // Search & Filter State
   const [searchTerm, setSearchTerm] = useState('');
@@ -503,7 +520,7 @@ export const AssignmentsView: React.FC<AssignmentsViewProps> = ({
               className="text-xs py-1 px-2.5 rounded-lg border border-slate-200 bg-white text-slate-800 focus:border-indigo-500 outline-none"
             >
               <option value="all">All Classes</option>
-              {COMMON_CLASSES.filter((c) => c !== 'All Classes').map((c) => (
+              {distinctClasses.map((c) => (
                 <option key={c} value={c}>
                   {c}
                 </option>
@@ -949,7 +966,11 @@ export const AssignmentsView: React.FC<AssignmentsViewProps> = ({
                 id="input-target-class"
                 value={createClass}
                 onChange={(e) => setCreateClass(e.target.value)}
-                options={COMMON_CLASSES.map((c) => ({ value: c, label: c }))}
+                options={[
+                  { value: 'All Classes', label: 'All Classes (Tất cả các lớp)' },
+                  ...distinctClasses.map((c) => ({ value: c, label: c })),
+                  { value: 'Custom Class', label: '+ Nhập tên lớp tùy chỉnh...' },
+                ]}
               />
             </div>
             <div>
@@ -1030,7 +1051,11 @@ export const AssignmentsView: React.FC<AssignmentsViewProps> = ({
                   id="edit-asgn-class"
                   value={editClass}
                   onChange={(e) => setEditClass(e.target.value)}
-                  options={COMMON_CLASSES.map((c) => ({ value: c, label: c }))}
+                  options={[
+                    { value: 'All Classes', label: 'All Classes (Tất cả các lớp)' },
+                    ...distinctClasses.map((c) => ({ value: c, label: c })),
+                    { value: 'Custom Class', label: '+ Nhập tên lớp tùy chỉnh...' },
+                  ]}
                 />
               </div>
 

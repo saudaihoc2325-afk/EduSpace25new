@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Send,
   Check,
@@ -13,13 +13,19 @@ import {
   Sliders,
   Calendar,
   Layers,
+  Plus,
+  Trash2,
+  Settings,
+  X,
+  FolderPlus,
 } from 'lucide-react';
-import { Activity, Assignment, AssignmentSettings } from '../../types';
+import { Activity, Assignment, AssignmentSettings, ClassItem, GradeLevel } from '../../types';
 import { Modal } from '../ui/Modal';
 import { Button } from '../ui/Button';
 import { Input } from '../ui/Input';
 import { Select } from '../ui/Select';
 import { useToast } from '../../context/ToastContext';
+import { classService } from '../../services/firestoreService';
 import {
   getDirectStudentLink,
   getQrCodeUrl,
@@ -48,14 +54,6 @@ interface AssignModalProps {
   onViewAssignments: () => void;
   onLaunchStudentView?: (code: string) => void;
 }
-
-const COMMON_CLASSES = [
-  'All Classes',
-  '10A1', '10A2', '10A3', '10A4', '10A5',
-  '11A1', '11A2', '11A3', '11A4', '11A5',
-  '12A1', '12A2', '12A3', '12A4', '12A5',
-  'Custom Class',
-];
 
 export const AssignModal: React.FC<AssignModalProps> = ({
   activity,
@@ -93,6 +91,108 @@ export const AssignModal: React.FC<AssignModalProps> = ({
   const [isLinkCopied, setIsLinkCopied] = useState(false);
   const [qrSize, setQrSize] = useState<160 | 240 | 320>(240);
   const [isDownloadingQr, setIsDownloadingQr] = useState(false);
+
+  // Dynamic Class Management State (Zero default classes, completely teacher-created)
+  const [savedClasses, setSavedClasses] = useState<ClassItem[]>([]);
+  const [isAddingClass, setIsAddingClass] = useState(false);
+  const [newClassName, setNewClassName] = useState('');
+  const [newClassGrade, setNewClassGrade] = useState<GradeLevel>('10');
+  const [isSavingClass, setIsSavingClass] = useState(false);
+  const [isManagingClasses, setIsManagingClasses] = useState(false);
+  const [deletingClassId, setDeletingClassId] = useState<string | null>(null);
+  const [isDeletingAll, setIsDeletingAll] = useState(false);
+
+  const teacherOwnerId = activity?.ownerId || 'teacher_default';
+
+  useEffect(() => {
+    const unsub = classService.subscribeClasses(teacherOwnerId, (list) => {
+      setSavedClasses(list);
+    });
+    return () => unsub();
+  }, [teacherOwnerId]);
+
+  // Compute available class names - only 'All Classes', teacher's custom classes, and 'Custom Class'
+  const availableClassOptions = React.useMemo(() => {
+    const options = [{ value: 'All Classes', label: 'All Classes (Tất cả các lớp)' }];
+    savedClasses.forEach((c) => {
+      options.push({
+        value: c.name,
+        label: c.gradeLevel && c.gradeLevel !== 'All Grades' ? `${c.name} (Khối ${c.gradeLevel})` : c.name,
+      });
+    });
+    options.push({ value: 'Custom Class', label: '+ Nhập tên lớp tùy chỉnh khác...' });
+    return options;
+  }, [savedClasses]);
+
+  const handleCreateClass = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const clean = newClassName.trim().toUpperCase();
+    if (!clean) {
+      showError('Vui lòng nhập tên lớp');
+      return;
+    }
+
+    if (savedClasses.some((c) => c.name.toUpperCase() === clean)) {
+      showError(`Lớp "${clean}" đã tồn tại trong danh sách của bạn`);
+      setSelectedClassOption(clean);
+      setIsAddingClass(false);
+      return;
+    }
+
+    setIsSavingClass(true);
+    try {
+      const created = await classService.addClass(teacherOwnerId, clean, newClassGrade);
+      setSelectedClassOption(created.name);
+      setNewClassName('');
+      setIsAddingClass(false);
+      showSuccess(`Đã tạo và thêm lớp ${created.name} thành công!`);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Không thể tạo lớp học';
+      showError(msg);
+    } finally {
+      setIsSavingClass(false);
+    }
+  };
+
+  const handleDeleteClass = async (classItem: ClassItem) => {
+    if (!window.confirm(`Bạn có chắc chắn muốn xóa lớp "${classItem.name}" khỏi danh sách?`)) {
+      return;
+    }
+
+    setDeletingClassId(classItem.id);
+    try {
+      await classService.deleteClass(classItem.id);
+      if (selectedClassOption === classItem.name) {
+        setSelectedClassOption('All Classes');
+      }
+      showSuccess(`Đã xóa lớp ${classItem.name}`);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Không thể xóa lớp học';
+      showError(msg);
+    } finally {
+      setDeletingClassId(null);
+    }
+  };
+
+  const handleDeleteAllClasses = async () => {
+    if (savedClasses.length === 0) return;
+    if (!window.confirm(`Bạn có chắc muốn xóa TẤT CẢ (${savedClasses.length}) lớp học đã tạo? Hành động này sẽ làm sạch danh sách lớp.`)) {
+      return;
+    }
+
+    setIsDeletingAll(true);
+    try {
+      await classService.deleteAllClasses(teacherOwnerId);
+      setSelectedClassOption('All Classes');
+      setIsManagingClasses(false);
+      showSuccess('Đã làm sạch toàn bộ danh sách lớp học!');
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Không thể xóa tất cả lớp';
+      showError(msg);
+    } finally {
+      setIsDeletingAll(false);
+    }
+  };
 
   if (!activity) return null;
 
@@ -225,20 +325,185 @@ export const AssignModal: React.FC<AssignModalProps> = ({
           {/* Class Target & Time Limit */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <label className="text-xs font-bold text-slate-700 block mb-1">Target Class *</label>
+              <div className="flex items-center justify-between mb-1">
+                <label className="text-xs font-bold text-slate-700">Target Class *</label>
+                <div className="flex items-center gap-1.5">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsAddingClass(!isAddingClass);
+                      setIsManagingClasses(false);
+                    }}
+                    className="text-[11px] font-bold text-indigo-600 hover:text-indigo-700 hover:underline flex items-center gap-0.5 cursor-pointer"
+                  >
+                    <Plus className="w-3 h-3" />
+                    <span>Thêm lớp</span>
+                  </button>
+                  {savedClasses.length > 0 && (
+                    <>
+                      <span className="text-slate-300">•</span>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsManagingClasses(!isManagingClasses);
+                          setIsAddingClass(false);
+                        }}
+                        className="text-[11px] font-bold text-slate-500 hover:text-slate-700 flex items-center gap-0.5 cursor-pointer"
+                      >
+                        <Settings className="w-3 h-3" />
+                        <span>Quản lý ({savedClasses.length})</span>
+                      </button>
+                    </>
+                  )}
+                </div>
+              </div>
+
+              {/* Inline Add Class Form */}
+              {isAddingClass && (
+                <div className="mb-2 p-3 bg-indigo-50/80 border border-indigo-200 rounded-xl space-y-2 animate-in fade-in zoom-in-95 duration-150">
+                  <div className="flex items-center justify-between text-xs font-bold text-indigo-950">
+                    <span className="flex items-center gap-1">
+                      <FolderPlus className="w-3.5 h-3.5 text-indigo-600" />
+                      Tạo lớp học mới
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setIsAddingClass(false)}
+                      className="text-slate-400 hover:text-slate-600 p-0.5"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="text"
+                      value={newClassName}
+                      onChange={(e) => setNewClassName(e.target.value)}
+                      placeholder="Tên lớp (VD: 10A6, 11D1, 12A1)..."
+                      className="flex-1 text-xs h-8 px-2.5 rounded-lg border border-indigo-300 bg-white text-slate-900 focus:outline-none focus:ring-1 focus:ring-indigo-500 font-bold uppercase"
+                      autoFocus
+                    />
+                    <select
+                      value={newClassGrade}
+                      onChange={(e) => setNewClassGrade(e.target.value as GradeLevel)}
+                      className="text-xs h-8 px-2 rounded-lg border border-indigo-300 bg-white text-slate-800 focus:outline-none"
+                    >
+                      <option value="10">Khối 10</option>
+                      <option value="11">Khối 11</option>
+                      <option value="12">Khối 12</option>
+                      <option value="All Grades">Chung</option>
+                    </select>
+                  </div>
+                  <div className="flex items-center justify-end gap-1.5 pt-1">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setIsAddingClass(false)}
+                      className="h-7 text-[11px] px-2.5 rounded-lg"
+                    >
+                      Hủy
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="primary"
+                      size="sm"
+                      onClick={handleCreateClass}
+                      disabled={isSavingClass || !newClassName.trim()}
+                      icon={isSavingClass ? <Loader2 className="w-3 h-3 animate-spin" /> : <Plus className="w-3 h-3" />}
+                      className="h-7 text-[11px] px-3 rounded-lg bg-indigo-600 hover:bg-indigo-500"
+                    >
+                      {isSavingClass ? 'Đang lưu...' : 'Lưu lớp'}
+                    </Button>
+                  </div>
+                </div>
+              )}
+
+              {/* Class Management List (Delete classes) */}
+              {isManagingClasses && (
+                <div className="mb-2 p-3 bg-slate-50 border border-slate-200 rounded-xl space-y-2 max-h-56 overflow-y-auto animate-in fade-in zoom-in-95 duration-150">
+                  <div className="flex items-center justify-between text-xs font-bold text-slate-800 pb-1 border-b border-slate-200/60">
+                    <span>Danh sách lớp học của bạn ({savedClasses.length})</span>
+                    <div className="flex items-center gap-2">
+                      {savedClasses.length > 0 && (
+                        <button
+                          type="button"
+                          onClick={handleDeleteAllClasses}
+                          disabled={isDeletingAll}
+                          className="text-[10px] text-rose-600 hover:text-rose-800 font-semibold hover:underline cursor-pointer"
+                        >
+                          {isDeletingAll ? 'Đang xóa...' : 'Xóa tất cả'}
+                        </button>
+                      )}
+                      <button
+                        type="button"
+                        onClick={() => setIsManagingClasses(false)}
+                        className="text-slate-400 hover:text-slate-600 p-0.5"
+                      >
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </div>
+                  {savedClasses.length === 0 ? (
+                    <p className="text-[11px] text-slate-400 py-2 text-center">
+                      Danh sách trống. Hãy nhấn <strong>+ Thêm lớp</strong> để tạo lớp mới.
+                    </p>
+                  ) : (
+                    <div className="space-y-1">
+                      {savedClasses.map((cls) => (
+                        <div
+                          key={cls.id}
+                          className="flex items-center justify-between p-2 rounded-lg bg-white border border-slate-200 text-xs shadow-xs"
+                        >
+                          <div className="flex items-center gap-2">
+                            <strong className="font-bold text-slate-800">{cls.name}</strong>
+                            {cls.gradeLevel && (
+                              <span className="px-1.5 py-0.2 rounded bg-indigo-50 text-indigo-700 text-[10px] font-semibold border border-indigo-200">
+                                Khối {cls.gradeLevel}
+                              </span>
+                            )}
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteClass(cls)}
+                            disabled={deletingClassId === cls.id}
+                            className="p-1 rounded text-rose-500 hover:bg-rose-50 hover:text-rose-700 transition-colors flex items-center gap-1 text-[11px] font-bold"
+                            title="Xóa lớp học này"
+                          >
+                            {deletingClassId === cls.id ? (
+                              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                            ) : (
+                              <>
+                                <Trash2 className="w-3.5 h-3.5" />
+                                <span>Xóa</span>
+                              </>
+                            )}
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+
               <Select
                 id="modal-select-class"
                 value={selectedClassOption}
                 onChange={(e) => setSelectedClassOption(e.target.value)}
-                options={COMMON_CLASSES.map((c) => ({ value: c, label: c }))}
+                options={availableClassOptions}
               />
+              {savedClasses.length === 0 && selectedClassOption === 'All Classes' && !isAddingClass && (
+                <p className="mt-1 text-[11px] text-slate-400 italic">
+                  💡 Chưa có lớp học nào được tạo. Bạn có thể nhấn <strong className="text-indigo-600 font-semibold cursor-pointer" onClick={() => setIsAddingClass(true)}>+ Thêm lớp</strong> để tạo lớp mới hoặc để mặc định "All Classes".
+                </p>
+              )}
               {selectedClassOption === 'Custom Class' && (
                 <input
                   type="text"
                   value={customClass}
                   onChange={(e) => setCustomClass(e.target.value)}
-                  placeholder="Enter class name (e.g. 10A7)"
-                  className="mt-2 w-full text-xs h-9 px-3 rounded-lg border border-slate-300 focus:border-indigo-500 outline-none"
+                  placeholder="Nhập tên lớp tùy chỉnh (VD: 10A7, Chuyên Anh)..."
+                  className="mt-2 w-full text-xs h-9 px-3 rounded-lg border border-slate-300 focus:border-indigo-500 outline-none uppercase font-bold"
                   required
                 />
               )}
