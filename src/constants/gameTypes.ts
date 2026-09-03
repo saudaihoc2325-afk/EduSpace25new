@@ -60,6 +60,14 @@ export const GAME_TYPES: GameTypeMeta[] = [
     badgeColor: 'bg-cyan-100 text-cyan-700 border-cyan-200',
     isReady: true,
   },
+  {
+    type: 'sky_clouds',
+    label: 'Sky Clouds Quiz',
+    description: 'Floating cloud multiple choice quiz with animated sky visuals and tactile cloud touch targets.',
+    iconName: 'Cloud',
+    badgeColor: 'bg-sky-100 text-sky-700 border-sky-200',
+    isReady: true,
+  },
 ];
 
 export const FOLDER_COLORS = [

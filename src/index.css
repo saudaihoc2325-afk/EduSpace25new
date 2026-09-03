@@ -3,11 +3,47 @@
 @layer base {
   body {
     font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+    -webkit-tap-highlight-color: transparent;
   }
 
   h1, h2, h3, h4, .font-display {
     font-family: 'Outfit', 'Plus Jakarta Sans', system-ui, sans-serif;
   }
+}
+
+/* ----------------------------------------------------
+   WORDWALL-STYLE DYNAMIC FONT SCALING & MOBILE FLUIDITY
+---------------------------------------------------- */
+.font-fluid-question {
+  font-size: clamp(1.25rem, 4.5vw, 1.875rem); /* Min 20px on mobile up to 30px on desktop */
+  line-height: 1.35;
+  letter-spacing: -0.015em;
+}
+
+.font-fluid-option {
+  font-size: clamp(1rem, 3.5vw, 1.18rem); /* Min 16px up to 19px */
+  line-height: 1.45;
+}
+
+.font-fluid-sentence {
+  font-size: clamp(1.2rem, 4.2vw, 1.75rem); /* Min 19.2px up to 28px */
+  line-height: 1.5;
+}
+
+.font-fluid-passage {
+  font-size: clamp(0.875rem, 2.8vw, 1.05rem); /* 14px to 16.8px */
+  line-height: 1.65;
+}
+
+/* Fluid Touch Target Utilities */
+.touch-target-large {
+  min-height: 3.5rem; /* Min 56px for effortless thumb tapping */
+}
+
+.touch-target-badge {
+  width: clamp(2.5rem, 8vw, 2.875rem); /* 40px to 46px */
+  height: clamp(2.5rem, 8vw, 2.875rem);
+  font-size: clamp(0.95rem, 3.5vw, 1.15rem);
 }
 
 /* Custom scrollbars */
@@ -111,6 +147,74 @@
 
 .animate-neon-pulse {
   animation: neon-pulse 1.8s infinite ease-in-out;
+}
+
+/* ----------------------------------------------------
+   SKY CLOUDS THEME - FLOATING & HOVER KEYFRAMES
+---------------------------------------------------- */
+@keyframes cloud-drift-left {
+  0% { transform: translateX(0) translateY(0); }
+  50% { transform: translateX(-25px) translateY(-6px); }
+  100% { transform: translateX(0) translateY(0); }
+}
+
+@keyframes cloud-drift-right {
+  0% { transform: translateX(0) translateY(0); }
+  50% { transform: translateX(28px) translateY(8px); }
+  100% { transform: translateX(0) translateY(0); }
+}
+
+@keyframes cloud-float-bob {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-7px); }
+}
+
+@keyframes cloud-float-bob-delayed {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-9px); }
+}
+
+.animate-cloud-drift-1 {
+  animation: cloud-drift-left 18s ease-in-out infinite;
+}
+
+.animate-cloud-drift-2 {
+  animation: cloud-drift-right 24s ease-in-out infinite;
+}
+
+.animate-cloud-drift-3 {
+  animation: cloud-drift-left 22s ease-in-out infinite;
+}
+
+.animate-cloud-bob {
+  animation: cloud-float-bob 4.5s ease-in-out infinite;
+}
+
+.animate-cloud-bob-delayed {
+  animation: cloud-float-bob-delayed 5.5s ease-in-out infinite 1.2s;
+}
+
+/* Cloud Card 3D Neumorphic / Sky Shadows */
+.cloud-card-shadow {
+  box-shadow: 
+    0 12px 28px -6px rgba(14, 165, 233, 0.25),
+    0 4px 0 rgba(14, 116, 144, 0.5),
+    inset 0 2px 4px rgba(255, 255, 255, 0.8),
+    inset 0 -2px 6px rgba(186, 230, 253, 0.4);
+}
+
+.cloud-card-correct {
+  box-shadow: 
+    0 0 30px rgba(16, 185, 129, 0.6),
+    0 4px 0 rgba(4, 120, 87, 0.8),
+    inset 0 2px 4px rgba(255, 255, 255, 0.9);
+}
+
+.cloud-card-wrong {
+  box-shadow: 
+    0 0 25px rgba(244, 63, 94, 0.5),
+    0 4px 0 rgba(190, 18, 60, 0.8),
+    inset 0 2px 4px rgba(255, 255, 255, 0.8);
 }
 
 /* Print optimizations for Certificate of Achievement */

@@ -14,25 +14,31 @@ import {
   Calendar,
   Layers,
   ChevronRight,
+  FileDown,
 } from 'lucide-react';
-import { StudentResult, StudentAnswerRecord } from '../../../types';
+import { StudentResult, StudentAnswerRecord, Assignment } from '../../../types';
 import { StudentPerformanceSummary } from '../../../utils/analyticsUtils';
 import { Card } from '../../ui/Card';
 import { Button } from '../../ui/Button';
 import { Badge } from '../../ui/Badge';
 import { CertificateModal } from '../../student/CertificateModal';
+import { ExportReportModal } from './ExportReportModal';
+import { buildReportPayload } from '../../../utils/resultsReportExportUtils';
 
 interface StudentDetailModalProps {
   summary: StudentPerformanceSummary;
+  assignments?: Assignment[];
   onClose: () => void;
 }
 
 export const StudentDetailModal: React.FC<StudentDetailModalProps> = ({
   summary,
+  assignments = [],
   onClose,
 }) => {
   const [selectedAttemptIndex, setSelectedAttemptIndex] = useState(0);
   const [showCertificate, setShowCertificate] = useState(false);
+  const [showExportModal, setShowExportModal] = useState(false);
 
   const activeAttempt: StudentResult | undefined = summary.attempts[selectedAttemptIndex] || summary.attempts[0];
 
@@ -268,17 +274,30 @@ export const StudentDetailModal: React.FC<StudentDetailModalProps> = ({
         </div>
 
         {/* Modal Footer */}
-        <div className="p-4 bg-slate-50 border-t border-slate-200 flex items-center justify-between gap-3">
-          <Button
-            id="btn-teacher-print-cert"
-            variant="outline"
-            size="sm"
-            icon={<Award className="w-4 h-4 text-amber-600" />}
-            onClick={() => setShowCertificate(true)}
-            className="border-amber-400/80 bg-amber-50 hover:bg-amber-100 text-amber-950 font-bold rounded-xl text-xs"
-          >
-            🏆 Cấp & In Giấy Khen ({activeAttempt?.percentage || summary.bestPercentage}%)
-          </Button>
+        <div className="p-4 bg-slate-50 border-t border-slate-200 flex items-center justify-between gap-3 flex-wrap">
+          <div className="flex items-center gap-2 flex-wrap">
+            <Button
+              id="btn-teacher-print-cert"
+              variant="outline"
+              size="sm"
+              icon={<Award className="w-4 h-4 text-amber-600" />}
+              onClick={() => setShowCertificate(true)}
+              className="border-amber-400/80 bg-amber-50 hover:bg-amber-100 text-amber-950 font-bold rounded-xl text-xs"
+            >
+              🏆 Cấp & In Giấy Khen ({activeAttempt?.percentage || summary.bestPercentage}%)
+            </Button>
+
+            <Button
+              id="btn-teacher-export-student"
+              variant="outline"
+              size="sm"
+              icon={<FileDown className="w-4 h-4 text-indigo-600" />}
+              onClick={() => setShowExportModal(true)}
+              className="border-indigo-300 bg-indigo-50 hover:bg-indigo-100 text-indigo-950 font-bold rounded-xl text-xs"
+            >
+              Xuất Báo Cáo Cá Nhân (Word / Excel / PDF)
+            </Button>
+          </div>
 
           <Button variant="outline" size="sm" onClick={onClose} className="rounded-xl">
             Đóng
@@ -299,6 +318,23 @@ export const StudentDetailModal: React.FC<StudentDetailModalProps> = ({
             assignmentCode: activeAttempt.assignmentCode,
           }}
           onClose={() => setShowCertificate(false)}
+        />
+      )}
+
+      {showExportModal && (
+        <ExportReportModal
+          payload={buildReportPayload({
+            results: summary.attempts,
+            assignments,
+            selectedAssignmentFilter: 'all',
+            selectedClassFilter: summary.studentClass,
+            selectedStudentFilter: summary.studentName,
+            startDateFilter: '',
+            endDateFilter: '',
+            dateFilter: 'all',
+            attemptFilter: 'all',
+          })}
+          onClose={() => setShowExportModal(false)}
         />
       )}
     </div>

@@ -1157,10 +1157,14 @@ export const QuestionSetEditor: React.FC<QuestionSetEditorProps> = ({
                 </label>
                 <div className="grid grid-cols-2 gap-2">
                   {[
-                    { id: 'quiz', label: 'Quiz Bowl', desc: 'Fast-paced multiple choice' },
+                    { id: 'quiz', label: 'Quiz', desc: 'Classic multiple-choice test' },
+                    { id: 'sky_clouds', label: 'Sky Clouds Quiz', desc: 'Floating cloud interactive quiz' },
                     { id: 'gameshow_quiz', label: 'Gameshow Quiz', desc: 'Lifelines & point multipliers' },
                     { id: 'match_up', label: 'Match Up Cards', desc: 'Card matching memory challenge' },
                     { id: 'random_wheel', label: 'Random Wheel', desc: 'Classroom picker wheel' },
+                    { id: 'open_box', label: 'Open the Box', desc: 'Interactive mystery boxes' },
+                    { id: 'anagram', label: 'Anagram', desc: 'Letter unscramble game' },
+                    { id: 'complete_sentence', label: 'Complete Sentence', desc: 'Fill in the blanks' },
                   ].map((gt) => (
                     <button
                       key={gt.id}

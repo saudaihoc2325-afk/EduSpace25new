@@ -16,6 +16,7 @@ const STORAGE_KEYS = {
   ASSIGNMENTS: 'eduspace25_assignments',
   RESULTS: 'eduspace25_results',
   TEACHER: 'eduspace25_teacher_profile',
+  QUESTION_SETS: 'eduspace25_question_sets',
 };
 
 class EduSpaceDatabase {
@@ -131,6 +132,11 @@ class EduSpaceDatabase {
   public getActivityById(id: string): Activity | null {
     const activities = this.getActivities();
     return activities.find((a) => a.id === id) || null;
+  }
+
+  // --- QUESTION SETS ---
+  public getQuestionSets(): QuestionSet[] {
+    return this.getItem<QuestionSet[]>(STORAGE_KEYS.QUESTION_SETS, []);
   }
 
   public saveActivity(data: {
@@ -358,6 +364,12 @@ class EduSpaceDatabase {
     return newResult;
   }
 
+  public deleteResult(id: string): void {
+    const results = this.getItem<StudentResult[]>(STORAGE_KEYS.RESULTS, []);
+    const filtered = results.filter((r) => r.id !== id && r.attemptId !== id);
+    this.setItem(STORAGE_KEYS.RESULTS, filtered);
+  }
+
   // --- STUDENTS ROSTER ---
   public getStudents(): StudentProfile[] {
     const results = this.getResults();
@@ -414,3 +426,4 @@ class EduSpaceDatabase {
 }
 
 export const db = new EduSpaceDatabase();
+export const dbService = db;

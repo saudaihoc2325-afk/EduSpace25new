@@ -20,13 +20,16 @@ import {
   StudentResult,
   TeacherNavTab,
   UserRole,
+  QuestionSet,
 } from './types';
 import {
   activityService,
   assignmentService,
   folderService,
   resultService,
+  questionSetService,
 } from './services/firestoreService';
+import { dbService } from './services/db';
 import { ToastProvider, useToast } from './context/ToastContext';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { TeacherSidebar } from './components/layout/TeacherSidebar';
@@ -96,6 +99,17 @@ function MainApp() {
   const [assignments, setAssignments] = useState<Assignment[]>([]);
   const [results, setResults] = useState<StudentResult[]>([]);
   const [students, setStudents] = useState<StudentProfile[]>([]);
+  const [questionSets, setQuestionSets] = useState<QuestionSet[]>([]);
+
+  // Load question sets from local storage / cache
+  useEffect(() => {
+    try {
+      const sets = dbService.getQuestionSets();
+      setQuestionSets(sets);
+    } catch (e) {
+      console.error('Error loading question sets:', e);
+    }
+  }, []);
 
   // Editor / Modal States
   const [editingActivity, setEditingActivity] = useState<Activity | null>(null);
@@ -187,12 +201,24 @@ function MainApp() {
       }
     );
 
+    // 6. Subscribe Question Sets
+    const unsubQuestionSets = questionSetService.subscribeQuestionSets(
+      ownerId,
+      (data) => {
+        setQuestionSets(data);
+      },
+      (err) => {
+        console.error('Question sets sync error:', err);
+      }
+    );
+
     return () => {
       unsubFolders();
       unsubActivities();
       unsubAssignments();
       unsubResults();
       unsubStudents();
+      unsubQuestionSets();
     };
   }, [user, isAuthLoading]);
 
@@ -346,6 +372,18 @@ function MainApp() {
 
   const handleDeleteAssignment = async (id: string) => {
     await assignmentService.deleteAssignment(id);
+  };
+
+  const handleDeleteResult = async (id: string) => {
+    try {
+      await resultService.deleteResult(id);
+      dbService.deleteResult(id);
+      setResults((prev) => prev.filter((r) => r.id !== id && r.attemptId !== id));
+      showSuccess('Đã xóa kết quả bài làm thành công! Dữ liệu phân tích lỗi đã được cập nhật.');
+    } catch (err) {
+      console.error('Failed to delete student result:', err);
+      showError('Không thể xóa kết quả bài làm. Vui lòng thử lại.');
+    }
   };
 
   // Teacher navigation helpers
@@ -530,7 +568,10 @@ function MainApp() {
                 <ResultsView
                   results={results}
                   assignments={assignments}
+                  activities={activities}
+                  questionSets={questionSets}
                   initialSelectedAssignmentId={targetResultAssignmentId}
+                  onDeleteResult={handleDeleteResult}
                 />
               )}
 

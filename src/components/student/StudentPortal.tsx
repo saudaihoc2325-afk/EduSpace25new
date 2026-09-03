@@ -26,6 +26,7 @@ import {
   EyeOff,
   ChevronDown,
   ChevronUp,
+  Trophy,
 } from 'lucide-react';
 import { Assignment, Activity, StudentAnswerRecord, StudentResult, QuestionItem } from '../../types';
 import { APP_NAME, ORG_NAME, GAME_TYPES } from '../../constants/gameTypes';
@@ -37,6 +38,7 @@ import { useToast } from '../../context/ToastContext';
 import { GameSessionRunner } from '../games/GameSessionRunner';
 import { CertificateModal } from './CertificateModal';
 import { EncouragementCard } from './EncouragementCard';
+import { StudentLeaderboardModal } from './StudentLeaderboardModal';
 
 interface StudentPortalProps {
   initialCode?: string | null;
@@ -97,6 +99,7 @@ export const StudentPortal: React.FC<StudentPortalProps> = ({
   const [answersSummary, setAnswersSummary] = useState<StudentAnswerRecord[]>([]);
   const [isReviewExpanded, setIsReviewExpanded] = useState(false);
   const [showCertificate, setShowCertificate] = useState(false);
+  const [showLeaderboard, setShowLeaderboard] = useState(false);
 
   // Pending submission payload for retry support
   const [pendingPayload, setPendingPayload] = useState<Parameters<typeof resultService.submitStudentResult>[0] | null>(null);
@@ -663,7 +666,7 @@ export const StudentPortal: React.FC<StudentPortalProps> = ({
                 <form onSubmit={handleStartActivity} className="space-y-4">
                   {/* Field 1: Full Name */}
                   <div>
-                    <label className="text-xs font-bold uppercase tracking-wider text-slate-300 block mb-1.5">
+                    <label className="text-xs sm:text-sm font-extrabold uppercase tracking-wider text-slate-300 block mb-2">
                       Họ và tên học sinh <span className="text-rose-400">*</span>
                     </label>
                     <div className="relative">
@@ -673,7 +676,7 @@ export const StudentPortal: React.FC<StudentPortalProps> = ({
                         placeholder="Ví dụ: Nguyễn Văn An"
                         value={studentName}
                         onChange={(e) => setStudentName(e.target.value)}
-                        className="w-full h-12 px-4 rounded-xl border border-slate-700 bg-slate-950 text-sm font-semibold text-white placeholder:text-slate-600 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/20 outline-none transition-all"
+                        className="w-full min-h-[3.25rem] sm:min-h-[3.5rem] px-4.5 rounded-2xl border border-slate-700 bg-slate-950 text-base sm:text-lg font-bold text-white placeholder:text-slate-600 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/20 outline-none transition-all shadow-inner"
                         required
                         autoFocus
                       />
@@ -682,8 +685,8 @@ export const StudentPortal: React.FC<StudentPortalProps> = ({
 
                   {/* Field 2: Class */}
                   <div>
-                    <label className="text-xs font-bold uppercase tracking-wider text-slate-300 block mb-1.5">
-                      Lớp <span className="text-rose-400">*</span>
+                    <label className="text-xs sm:text-sm font-extrabold uppercase tracking-wider text-slate-300 block mb-2">
+                      Lớp học <span className="text-rose-400">*</span>
                     </label>
                     <div className="relative">
                       <input
@@ -692,18 +695,18 @@ export const StudentPortal: React.FC<StudentPortalProps> = ({
                         placeholder="Ví dụ: 10A1, 11B2, 12D1"
                         value={studentClass}
                         onChange={(e) => setStudentClass(e.target.value)}
-                        className="w-full h-12 px-4 rounded-xl border border-slate-700 bg-slate-950 text-sm font-semibold text-white placeholder:text-slate-600 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/20 outline-none transition-all uppercase"
+                        className="w-full min-h-[3.25rem] sm:min-h-[3.5rem] px-4.5 rounded-2xl border border-slate-700 bg-slate-950 text-base sm:text-lg font-bold text-white placeholder:text-slate-600 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/20 outline-none transition-all uppercase shadow-inner"
                         required
                       />
                     </div>
                     {/* Quick suggestions if target class is set */}
                     {activeAssignment?.targetClass && activeAssignment.targetClass !== 'All Classes' && (
-                      <div className="mt-1.5 flex items-center gap-1.5 text-[11px] text-slate-400">
+                      <div className="mt-2 flex items-center gap-2 text-xs text-slate-400">
                         <span>Lớp được chỉ định:</span>
                         <button
                           type="button"
                           onClick={() => setStudentClass(activeAssignment.targetClass || '')}
-                          className="px-2 py-0.5 rounded bg-indigo-500/20 text-indigo-300 hover:bg-indigo-500/30 font-semibold"
+                          className="px-2.5 py-1 rounded-lg bg-indigo-500/20 text-indigo-300 hover:bg-indigo-500/30 font-bold cursor-pointer"
                         >
                           {activeAssignment.targetClass}
                         </button>
@@ -714,7 +717,7 @@ export const StudentPortal: React.FC<StudentPortalProps> = ({
                   {/* Optional Student ID if required by settings */}
                   {activeAssignment?.settings?.requireStudentId && (
                     <div>
-                      <label className="text-xs font-bold uppercase tracking-wider text-slate-300 block mb-1.5">
+                      <label className="text-xs sm:text-sm font-extrabold uppercase tracking-wider text-slate-300 block mb-2">
                         Mã số học sinh / SBD <span className="text-rose-400">*</span>
                       </label>
                       <input
@@ -723,7 +726,7 @@ export const StudentPortal: React.FC<StudentPortalProps> = ({
                         placeholder="Ví dụ: HS1001"
                         value={studentId}
                         onChange={(e) => setStudentId(e.target.value)}
-                        className="w-full h-12 px-4 rounded-xl border border-slate-700 bg-slate-950 text-sm font-semibold text-white placeholder:text-slate-600 focus:border-indigo-500 outline-none"
+                        className="w-full min-h-[3.25rem] sm:min-h-[3.5rem] px-4.5 rounded-2xl border border-slate-700 bg-slate-950 text-base sm:text-lg font-bold text-white placeholder:text-slate-600 focus:border-indigo-500 outline-none shadow-inner"
                         required
                       />
                     </div>
@@ -739,7 +742,7 @@ export const StudentPortal: React.FC<StudentPortalProps> = ({
                       fullWidth
                       disabled={!studentName.trim() || !studentClass.trim() || !activeActivity}
                       icon={<ArrowRight className="w-5 h-5" />}
-                      className="shadow-xl shadow-indigo-600/40 text-sm font-bold h-12 rounded-xl cursor-pointer"
+                      className="shadow-xl shadow-indigo-600/40 text-base font-extrabold min-h-[3.25rem] sm:min-h-[3.5rem] rounded-2xl cursor-pointer"
                     >
                       Vào Làm Bài Ngay
                     </Button>
@@ -1030,6 +1033,21 @@ export const StudentPortal: React.FC<StudentPortalProps> = ({
 
         {/* Action Controls */}
         <div className="pt-2 flex flex-col gap-2.5">
+          {/* View Leaderboard Button (Prompt 16 Section 14) */}
+          {activeAssignment?.id && (
+            <Button
+              id="btn-student-view-leaderboard"
+              variant="outline"
+              size="lg"
+              fullWidth
+              icon={<Trophy className="w-4 h-4 text-amber-400" />}
+              onClick={() => setShowLeaderboard(true)}
+              className="h-12 bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border-amber-500/30 text-sm font-bold rounded-xl"
+            >
+              🏆 Xem Bảng Xếp Hạng (Leaderboard)
+            </Button>
+          )}
+
           {canPlayAgain && (
             <Button
               id="btn-student-play-again"
@@ -1074,6 +1092,17 @@ export const StudentPortal: React.FC<StudentPortalProps> = ({
             assignmentCode: activeAssignment?.code || enteredCode,
           }}
           onClose={() => setShowCertificate(false)}
+        />
+      )}
+
+      {showLeaderboard && activeAssignment && (
+        <StudentLeaderboardModal
+          assignmentId={activeAssignment.id}
+          assignmentCode={activeAssignment.assignmentCode || activeAssignment.code || enteredCode}
+          activityTitle={activeAssignment.title || activeActivity?.title || 'Interactive English Activity'}
+          currentStudentName={studentName}
+          currentStudentClass={studentClass}
+          onClose={() => setShowLeaderboard(false)}
         />
       )}
     </div>

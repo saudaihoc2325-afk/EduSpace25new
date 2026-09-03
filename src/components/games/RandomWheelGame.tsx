@@ -406,13 +406,13 @@ export const RandomWheelGame: React.FC<RandomWheelGameProps> = ({
             type="button"
             onClick={handleSpin}
             disabled={isSpinning || activeItems.length === 0}
-            className={`mt-6 px-10 py-3.5 rounded-2xl font-black text-sm text-white flex items-center gap-3 shadow-[0_4px_0_rgba(180,83,9,0.8),0_0_25px_rgba(245,158,11,0.4)] transition-all cursor-pointer ${
+            className={`mt-6 w-full sm:w-auto px-8 sm:px-12 py-4 sm:py-4.5 rounded-2xl font-black text-base sm:text-lg text-white flex items-center justify-center gap-3 shadow-[0_4px_0_rgba(180,83,9,0.8),0_0_25px_rgba(245,158,11,0.4)] transition-all cursor-pointer ${
               isSpinning || activeItems.length === 0
                 ? 'bg-slate-800 text-slate-500 cursor-not-allowed opacity-50'
                 : 'bg-gradient-to-r from-amber-500 via-amber-600 to-orange-500 hover:from-amber-400 hover:to-orange-400 active:translate-y-1 active:shadow-[0_1px_0_rgba(180,83,9,0.8)]'
             }`}
           >
-            <Disc className={`w-5 h-5 ${isSpinning ? 'animate-spin' : ''}`} />
+            <Disc className={`w-6 h-6 ${isSpinning ? 'animate-spin' : ''}`} />
             <span>{isSpinning ? 'Đang quay...' : 'QUAY VÒNG MAY MẮN'}</span>
           </button>
         </div>
@@ -437,12 +437,12 @@ export const RandomWheelGame: React.FC<RandomWheelGameProps> = ({
             </div>
           )}
 
-          <h2 className="text-base sm:text-lg md:text-xl font-extrabold text-white leading-relaxed font-display">
+          <h2 className="font-fluid-question font-extrabold text-white leading-snug font-display tracking-tight">
             {selectedQuestion.question}
           </h2>
 
           {/* Dynamic 3D Neon Multiple Choice Options (A, B, C, D, E, F...) */}
-          <div className="grid grid-cols-1 gap-3.5">
+          <div className="grid grid-cols-1 gap-3 sm:gap-3.5">
             {selectedQuestion.options.map((opt, optIdx) => {
               const isSelected = selectedOptId === opt.id;
               const isCorrect =
@@ -463,22 +463,22 @@ export const RandomWheelGame: React.FC<RandomWheelGameProps> = ({
                   type="button"
                   onClick={(e) => handleSelectOption(opt.id, e)}
                   disabled={isQuestionAnswered}
-                  className={`w-full p-4 rounded-2xl border text-left flex items-center justify-between gap-3 transition-all duration-200 cursor-pointer ${cardClasses}`}
+                  className={`w-full min-h-[3.75rem] sm:min-h-[4.25rem] p-3.5 sm:p-4.5 rounded-2xl border text-left flex items-center justify-between gap-3.5 transition-all duration-200 cursor-pointer active:scale-[0.99] ${cardClasses}`}
                 >
-                  <div className="flex items-center gap-3.5 min-w-0">
-                    <span className={`w-8 h-8 rounded-xl text-xs flex items-center justify-center shrink-0 border ${badgeClasses}`}>
+                  <div className="flex items-center gap-3 sm:gap-3.5 min-w-0 flex-1">
+                    <span className={`touch-target-badge rounded-xl sm:rounded-2xl flex items-center justify-center shrink-0 border font-black ${badgeClasses}`}>
                       {opt.label || String.fromCharCode(65 + optIdx)}
                     </span>
-                    <span className="text-xs sm:text-sm font-semibold text-slate-100 break-words">{opt.text}</span>
+                    <span className="font-fluid-option font-bold text-slate-100 break-words flex-1 leading-snug">{opt.text}</span>
                   </div>
                   {isQuestionAnswered && isCorrect && (
-                    <div className="shrink-0 flex items-center justify-center w-7 h-7 rounded-xl bg-emerald-500/20 border border-emerald-400/60 shadow-[0_0_10px_rgba(52,211,153,0.6)]">
-                      <CheckCircle2 className="w-4.5 h-4.5 text-emerald-300" />
+                    <div className="shrink-0 flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-emerald-500/20 border border-emerald-400/60 shadow-[0_0_10px_rgba(52,211,153,0.6)]">
+                      <CheckCircle2 className="w-5 h-5 sm:w-5.5 sm:h-5.5 text-emerald-300" />
                     </div>
                   )}
                   {isQuestionAnswered && isSelected && !isCorrect && (
-                    <div className="shrink-0 flex items-center justify-center w-7 h-7 rounded-xl bg-rose-500/20 border border-rose-400/60 shadow-[0_0_10px_rgba(244,63,94,0.6)]">
-                      <XCircle className="w-4.5 h-4.5 text-rose-300" />
+                    <div className="shrink-0 flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-rose-500/20 border border-rose-400/60 shadow-[0_0_10px_rgba(244,63,94,0.6)]">
+                      <XCircle className="w-5 h-5 sm:w-5.5 sm:h-5.5 text-rose-300" />
                     </div>
                   )}
                 </button>

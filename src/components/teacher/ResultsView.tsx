@@ -23,8 +23,14 @@ import {
   UserCheck,
   Gamepad2,
   BookOpen,
+  Trash2,
+  RotateCcw,
+  FileSpreadsheet,
+  FileText,
+  Settings,
+  Trophy,
 } from 'lucide-react';
-import { Assignment, StudentResult } from '../../types';
+import { Assignment, StudentResult, Activity, QuestionSet } from '../../types';
 import { Card } from '../ui/Card';
 import { Button } from '../ui/Button';
 import { Badge } from '../ui/Badge';
@@ -39,24 +45,37 @@ import { exportResultsToCsv } from '../../utils/exportUtils';
 import { StudentDetailModal } from './results/StudentDetailModal';
 import { ClassStatisticsTab } from './results/ClassStatisticsTab';
 import { QuestionAnalysisTab } from './results/QuestionAnalysisTab';
+import { LeaderboardTab } from './results/LeaderboardTab';
 import { PrintReportModal } from './results/PrintReportModal';
+import { ExportReportModal } from './results/ExportReportModal';
+import {
+  buildReportPayload,
+  exportResultsToExcel,
+  exportResultsToWord,
+} from '../../utils/resultsReportExportUtils';
 
 interface ResultsViewProps {
   results: StudentResult[];
   assignments: Assignment[];
+  activities?: Activity[];
+  questionSets?: QuestionSet[];
   initialSelectedAssignmentId?: string | null;
   onRefresh?: () => void;
+  onDeleteResult?: (id: string) => Promise<void> | void;
 }
 
-type TabType = 'gradebook' | 'class-stats' | 'question-analysis';
+type TabType = 'gradebook' | 'class-stats' | 'question-analysis' | 'leaderboard';
 type AttemptFilterType = 'all' | 'best' | 'latest';
-type DateFilterType = 'all' | 'today' | '7days' | '30days';
+type DateFilterType = 'all' | 'today' | '7days' | '30days' | 'custom';
 
 export const ResultsView: React.FC<ResultsViewProps> = ({
   results,
   assignments,
+  activities = [],
+  questionSets = [],
   initialSelectedAssignmentId,
   onRefresh,
+  onDeleteResult,
 }) => {
   const { showSuccess, showInfo } = useToast();
 
@@ -68,6 +87,9 @@ export const ResultsView: React.FC<ResultsViewProps> = ({
     initialSelectedAssignmentId || 'all'
   );
   const [selectedClassFilter, setSelectedClassFilter] = useState<string>('all');
+  const [selectedStudentFilter, setSelectedStudentFilter] = useState<string>('all');
+  const [startDateFilter, setStartDateFilter] = useState<string>('');
+  const [endDateFilter, setEndDateFilter] = useState<string>('');
   const [attemptFilter, setAttemptFilter] = useState<AttemptFilterType>('all');
   const [dateFilter, setDateFilter] = useState<DateFilterType>('all');
   const [performanceTierFilter, setPerformanceTierFilter] = useState<string>('all');
@@ -77,6 +99,8 @@ export const ResultsView: React.FC<ResultsViewProps> = ({
   const [expandedResultId, setExpandedResultId] = useState<string | null>(null);
   const [selectedStudentSummary, setSelectedStudentSummary] = useState<StudentPerformanceSummary | null>(null);
   const [isPrintModalOpen, setIsPrintModalOpen] = useState(false);
+  const [isExportReportModalOpen, setIsExportReportModalOpen] = useState(false);
+  const [isExportMenuOpen, setIsExportMenuOpen] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
   // Extract Unique Classes dynamically from raw results & assignments
@@ -93,16 +117,29 @@ export const ResultsView: React.FC<ResultsViewProps> = ({
     return Array.from(classes).sort();
   }, [results, assignments]);
 
-  // Compute Base Filtered Results (Assignment, Class, Date, Search)
+  // Extract Unique Students dynamically for student filter
+  const uniqueStudents = useMemo(() => {
+    const studentsMap = new Map<string, string>();
+    results.forEach((r) => {
+      if (r.studentName && r.studentName.trim()) {
+        const key = r.studentName.trim();
+        studentsMap.set(key.toLowerCase(), key);
+      }
+    });
+    return Array.from(studentsMap.values()).sort((a, b) => a.localeCompare(b, 'vi'));
+  }, [results]);
+
+  // Compute Base Filtered Results (Assignment, Class, Student, Date Range, Search)
   const baseFilteredResults = useMemo(() => {
     const now = new Date().getTime();
 
     return results.filter((res) => {
-      // 1. Assignment Filter
+      // 1. Assignment / Activity Filter
       if (selectedAssignmentFilter !== 'all') {
         if (
           res.assignmentId !== selectedAssignmentFilter &&
-          res.assignmentCode !== selectedAssignmentFilter
+          res.assignmentCode !== selectedAssignmentFilter &&
+          res.activityId !== selectedAssignmentFilter
         ) {
           return false;
         }
@@ -115,8 +152,31 @@ export const ResultsView: React.FC<ResultsViewProps> = ({
         }
       }
 
-      // 3. Date Filter
-      if (dateFilter !== 'all') {
+      // 3. Student Filter
+      if (selectedStudentFilter !== 'all') {
+        if (
+          res.studentName?.trim().toLowerCase() !== selectedStudentFilter.trim().toLowerCase() &&
+          res.studentId !== selectedStudentFilter
+        ) {
+          return false;
+        }
+      }
+
+      // 4. Custom Date Range Filter (From Date - To Date)
+      if (startDateFilter) {
+        const startTs = new Date(`${startDateFilter}T00:00:00`).getTime();
+        const compTs = new Date(res.completedAt).getTime();
+        if (!isNaN(startTs) && compTs < startTs) return false;
+      }
+
+      if (endDateFilter) {
+        const endTs = new Date(`${endDateFilter}T23:59:59`).getTime();
+        const compTs = new Date(res.completedAt).getTime();
+        if (!isNaN(endTs) && compTs > endTs) return false;
+      }
+
+      // 5. Preset Date Filter
+      if (dateFilter !== 'all' && dateFilter !== 'custom') {
         const completedTime = new Date(res.completedAt).getTime();
         const diffDays = (now - completedTime) / (1000 * 3600 * 24);
 
@@ -125,7 +185,7 @@ export const ResultsView: React.FC<ResultsViewProps> = ({
         if (dateFilter === '30days' && diffDays > 30) return false;
       }
 
-      // 4. Performance Tier Filter
+      // 6. Performance Tier Filter
       if (performanceTierFilter !== 'all') {
         const pct = res.percentage;
         if (performanceTierFilter === 'excellent' && pct < 90) return false;
@@ -135,7 +195,7 @@ export const ResultsView: React.FC<ResultsViewProps> = ({
         if (performanceTierFilter === 'below' && pct >= 50) return false;
       }
 
-      // 5. Search Filter (Name, Class, SBD, Code)
+      // 7. Search Filter (Name, Class, SBD, Code, Activity Title)
       if (searchQuery.trim()) {
         const q = searchQuery.toLowerCase().trim();
         const matchName = res.studentName?.toLowerCase().includes(q);
@@ -155,6 +215,9 @@ export const ResultsView: React.FC<ResultsViewProps> = ({
     results,
     selectedAssignmentFilter,
     selectedClassFilter,
+    selectedStudentFilter,
+    startDateFilter,
+    endDateFilter,
     dateFilter,
     performanceTierFilter,
     searchQuery,
@@ -204,6 +267,35 @@ export const ResultsView: React.FC<ResultsViewProps> = ({
     }, 600);
   };
 
+  // Computed Report Payload for Results Report Export (Prompt 14)
+  const reportPayload = useMemo(() => {
+    return buildReportPayload({
+      results: displayResults,
+      assignments,
+      activities,
+      questionSets,
+      selectedAssignmentFilter,
+      selectedClassFilter,
+      selectedStudentFilter,
+      startDateFilter,
+      endDateFilter,
+      dateFilter,
+      attemptFilter,
+    });
+  }, [
+    displayResults,
+    assignments,
+    activities,
+    questionSets,
+    selectedAssignmentFilter,
+    selectedClassFilter,
+    selectedStudentFilter,
+    startDateFilter,
+    endDateFilter,
+    dateFilter,
+    attemptFilter,
+  ]);
+
   // Export CSV Handler
   const handleExportCSV = () => {
     exportResultsToCsv(displayResults, assignments, {
@@ -247,6 +339,108 @@ export const ResultsView: React.FC<ResultsViewProps> = ({
 
           {results.length > 0 && (
             <>
+              {/* Primary PROMPT 14 Requirement: [Export Report] button with Excel / Word / PDF options */}
+              <div className="relative inline-flex items-stretch shadow-md shadow-indigo-600/20 rounded-xl">
+                <Button
+                  id="btn-export-report"
+                  variant="primary"
+                  size="sm"
+                  icon={<FileDown className="w-4 h-4" />}
+                  onClick={() => setIsExportReportModalOpen(true)}
+                  className="bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs rounded-l-xl rounded-r-none border-r border-indigo-500"
+                >
+                  Export Report
+                </Button>
+                <button
+                  type="button"
+                  id="btn-export-report-dropdown"
+                  onClick={() => setIsExportMenuOpen((prev) => !prev)}
+                  className="bg-indigo-600 hover:bg-indigo-500 text-white px-2 py-1.5 rounded-r-xl text-xs font-bold transition-colors flex items-center justify-center cursor-pointer"
+                  title="Chọn định dạng xuất (Excel, Word, PDF)"
+                  aria-label="Chọn định dạng xuất"
+                >
+                  <ChevronDown className="w-3.5 h-3.5" />
+                </button>
+
+                {isExportMenuOpen && (
+                  <>
+                    <div
+                      className="fixed inset-0 z-30"
+                      onClick={() => setIsExportMenuOpen(false)}
+                    />
+                    <div className="absolute right-0 top-full mt-2 w-64 bg-white rounded-2xl shadow-xl border border-slate-200 py-2 z-40 animate-in fade-in zoom-in-95 duration-150">
+                      <div className="px-3 py-1.5 text-[10px] uppercase font-bold text-slate-400 tracking-wider">
+                        Định dạng xuất báo cáo
+                      </div>
+                      <button
+                        type="button"
+                        id="menu-export-excel"
+                        onClick={() => {
+                          setIsExportMenuOpen(false);
+                          exportResultsToExcel(reportPayload);
+                          showSuccess('Đã xuất báo cáo kết quả Excel (.xlsx) 5 sheets thành công!');
+                        }}
+                        className="w-full px-3.5 py-2.5 text-left text-xs font-bold text-slate-800 hover:bg-emerald-50 hover:text-emerald-900 flex items-center gap-2.5 transition-colors cursor-pointer"
+                      >
+                        <FileSpreadsheet className="w-4 h-4 text-emerald-600" />
+                        <div>
+                          <div>Export Excel (.xlsx)</div>
+                          <div className="text-[10px] text-slate-400 font-normal">Đầy đủ 5 sheets thống kê</div>
+                        </div>
+                      </button>
+
+                      <button
+                        type="button"
+                        id="menu-export-word"
+                        onClick={async () => {
+                          setIsExportMenuOpen(false);
+                          await exportResultsToWord(reportPayload);
+                          showSuccess('Đã xuất báo cáo kết quả Word (.docx) in ấn thành công!');
+                        }}
+                        className="w-full px-3.5 py-2.5 text-left text-xs font-bold text-slate-800 hover:bg-indigo-50 hover:text-indigo-900 flex items-center gap-2.5 transition-colors cursor-pointer"
+                      >
+                        <FileText className="w-4 h-4 text-indigo-600" />
+                        <div>
+                          <div>Export Word (.docx)</div>
+                          <div className="text-[10px] text-slate-400 font-normal">Mẫu văn bản in ấn chuẩn</div>
+                        </div>
+                      </button>
+
+                      <button
+                        type="button"
+                        id="menu-export-pdf"
+                        onClick={() => {
+                          setIsExportMenuOpen(false);
+                          setIsExportReportModalOpen(true);
+                        }}
+                        className="w-full px-3.5 py-2.5 text-left text-xs font-bold text-slate-800 hover:bg-rose-50 hover:text-rose-900 flex items-center gap-2.5 transition-colors cursor-pointer"
+                      >
+                        <FileDown className="w-4 h-4 text-rose-600" />
+                        <div>
+                          <div>Export PDF (.pdf)</div>
+                          <div className="text-[10px] text-slate-400 font-normal">Chuẩn tiếng Việt, chia trang</div>
+                        </div>
+                      </button>
+
+                      <div className="h-px bg-slate-100 my-1" />
+
+                      <button
+                        type="button"
+                        id="menu-export-custom"
+                        onClick={() => {
+                          setIsExportMenuOpen(false);
+                          setIsExportReportModalOpen(true);
+                        }}
+                        className="w-full px-3.5 py-2 text-left text-xs text-indigo-600 font-semibold hover:bg-indigo-50 flex items-center gap-2 transition-colors cursor-pointer"
+                      >
+                        <Settings className="w-3.5 h-3.5" />
+                        <span>Xem trước & Tùy chỉnh báo cáo...</span>
+                      </button>
+                    </div>
+                  </>
+                )}
+              </div>
+
               <Button
                 id="btn-print-teacher-report"
                 variant="outline"
@@ -260,13 +454,13 @@ export const ResultsView: React.FC<ResultsViewProps> = ({
 
               <Button
                 id="btn-export-csv-gradebook"
-                variant="primary"
+                variant="outline"
                 size="sm"
-                icon={<FileDown className="w-3.5 h-3.5" />}
+                icon={<FileSpreadsheet className="w-3.5 h-3.5 text-slate-500" />}
                 onClick={handleExportCSV}
-                className="bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs rounded-xl shadow-md shadow-indigo-600/20"
+                className="text-slate-700 hover:bg-slate-100 font-medium text-xs rounded-xl"
               >
-                Xuất Excel / CSV
+                CSV Sổ Điểm
               </Button>
             </>
           )}
@@ -303,26 +497,42 @@ export const ResultsView: React.FC<ResultsViewProps> = ({
 
         <button
           type="button"
+          id="tab-btn-question-analysis"
           onClick={() => setActiveTab('question-analysis')}
           className={`px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2 transition-all shrink-0 ${
             activeTab === 'question-analysis'
-              ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/20'
+              ? 'bg-rose-600 text-white shadow-md shadow-rose-600/20'
               : 'text-slate-600 hover:bg-slate-100'
           }`}
         >
           <HelpCircle className="w-4 h-4" />
-          <span>Phân Tích Câu Hỏi & Ma Trận Đề</span>
+          <span>Phân Tích Câu Hỏi & Ma Trận (Question Analysis & Matrix)</span>
+        </button>
+
+        <button
+          type="button"
+          id="tab-btn-leaderboard"
+          onClick={() => setActiveTab('leaderboard')}
+          className={`px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2 transition-all shrink-0 ${
+            activeTab === 'leaderboard'
+              ? 'bg-amber-600 text-white shadow-md shadow-amber-600/20'
+              : 'text-slate-600 hover:bg-slate-100'
+          }`}
+        >
+          <Trophy className="w-4 h-4" />
+          <span>🏆 Bảng Xếp Hạng (Leaderboard)</span>
         </button>
       </div>
 
-      {/* 3. Comprehensive Filter Suite */}
-      <Card variant="default" padding="sm" className="bg-slate-50/70 border-slate-200">
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2.5 items-center">
+      {/* 3. Comprehensive Filter Suite (Prompt 12 Section 5 & 11) */}
+      {activeTab !== 'leaderboard' && (
+        <Card variant="default" padding="sm" className="bg-slate-50/70 border-slate-200">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2.5 items-center">
           {/* Search */}
-          <div className="sm:col-span-2 lg:col-span-2">
+          <div className="sm:col-span-2">
             <Input
               id="input-search-results-main"
-              placeholder="Tìm theo tên học sinh, lớp, SBD hoặc mã bài..."
+              placeholder="Tìm theo tên học sinh, lớp, SBD..."
               leftIcon={<Search className="w-4 h-4" />}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
@@ -341,7 +551,7 @@ export const ResultsView: React.FC<ResultsViewProps> = ({
               <option value="all">Tất cả bài tập ({assignments.length})</option>
               {assignments.map((a) => (
                 <option key={a.id} value={a.id}>
-                  {a.title} (Mã: {a.assignmentCode})
+                  {a.title} ({a.assignmentCode})
                 </option>
               ))}
             </select>
@@ -365,6 +575,24 @@ export const ResultsView: React.FC<ResultsViewProps> = ({
             </select>
           </div>
 
+          {/* Student Dropdown (Prompt 12 Section 5) */}
+          <div>
+            <select
+              id="select-filter-student-main"
+              aria-label="Filter by Student"
+              value={selectedStudentFilter}
+              onChange={(e) => setSelectedStudentFilter(e.target.value)}
+              className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-100"
+            >
+              <option value="all">Tất cả học sinh ({uniqueStudents.length})</option>
+              {uniqueStudents.map((std) => (
+                <option key={std} value={std}>
+                  {std}
+                </option>
+              ))}
+            </select>
+          </div>
+
           {/* Attempt Mode Dropdown */}
           <div>
             <select
@@ -381,60 +609,98 @@ export const ResultsView: React.FC<ResultsViewProps> = ({
           </div>
         </div>
 
-        {/* Secondary Filter Tags */}
-        <div className="flex flex-wrap items-center justify-between gap-2 pt-2 mt-2 border-t border-slate-200/60 text-xs text-slate-500">
-          <div className="flex flex-wrap items-center gap-1.5">
-            <span className="font-semibold text-slate-600 mr-1 flex items-center gap-1">
-              <Filter className="w-3.5 h-3.5" /> Học lực:
+        {/* Date Range & Secondary Controls */}
+        <div className="flex flex-wrap items-center justify-between gap-2 pt-2.5 mt-2.5 border-t border-slate-200/60 text-xs text-slate-500">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="font-semibold text-slate-600 flex items-center gap-1">
+              <Calendar className="w-3.5 h-3.5 text-indigo-600" /> Thời gian:
             </span>
-            {[
-              { id: 'all', label: 'Tất cả' },
-              { id: 'excellent', label: 'Xuất sắc (≥90%)' },
-              { id: 'good', label: 'Giỏi (80-89%)' },
-              { id: 'fair', label: 'Khá (65-79%)' },
-              { id: 'average', label: 'TB (50-64%)' },
-              { id: 'below', label: 'Cần cố gắng (<50%)' },
-            ].map((tag) => (
-              <button
-                key={tag.id}
-                type="button"
-                onClick={() => setPerformanceTierFilter(tag.id)}
-                className={`px-2.5 py-1 rounded-lg text-[11px] font-semibold transition-colors ${
-                  performanceTierFilter === tag.id
-                    ? 'bg-indigo-600 text-white'
-                    : 'bg-white text-slate-600 hover:bg-slate-200/70 border border-slate-200'
-                }`}
-              >
-                {tag.label}
-              </button>
-            ))}
+
+            {/* Custom Date Range (Prompt 12: From Date -> To Date) */}
+            <div className="flex items-center gap-1.5">
+              <span className="text-[11px] text-slate-400">Từ:</span>
+              <input
+                type="date"
+                value={startDateFilter}
+                onChange={(e) => {
+                  setStartDateFilter(e.target.value);
+                  setDateFilter('custom');
+                }}
+                className="bg-white border border-slate-300 rounded-lg px-2 py-1 text-xs font-mono font-medium text-slate-700 focus:outline-none focus:ring-1 focus:ring-indigo-400"
+              />
+            </div>
+
+            <div className="flex items-center gap-1.5">
+              <span className="text-[11px] text-slate-400">Đến:</span>
+              <input
+                type="date"
+                value={endDateFilter}
+                onChange={(e) => {
+                  setEndDateFilter(e.target.value);
+                  setDateFilter('custom');
+                }}
+                className="bg-white border border-slate-300 rounded-lg px-2 py-1 text-xs font-mono font-medium text-slate-700 focus:outline-none focus:ring-1 focus:ring-indigo-400"
+              />
+            </div>
+
+            {/* Quick Presets */}
+            <div className="flex items-center gap-1 pl-1">
+              {[
+                { id: 'all', label: 'Tất cả' },
+                { id: 'today', label: 'Hôm nay' },
+                { id: '7days', label: '7 ngày' },
+                { id: '30days', label: '30 ngày' },
+              ].map((df) => (
+                <button
+                  key={df.id}
+                  type="button"
+                  onClick={() => {
+                    setDateFilter(df.id as DateFilterType);
+                    setStartDateFilter('');
+                    setEndDateFilter('');
+                  }}
+                  className={`px-2 py-0.5 rounded-md text-[11px] font-semibold transition-colors ${
+                    dateFilter === df.id
+                      ? 'bg-slate-800 text-white'
+                      : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
+                  }`}
+                >
+                  {df.label}
+                </button>
+              ))}
+            </div>
           </div>
 
-          <div className="flex items-center gap-1.5">
-            <span className="font-semibold text-slate-600 mr-1 flex items-center gap-1">
-              <Calendar className="w-3.5 h-3.5" /> Thời gian:
-            </span>
-            {[
-              { id: 'all', label: 'Tất cả' },
-              { id: 'today', label: 'Hôm nay' },
-              { id: '7days', label: '7 ngày qua' },
-            ].map((df) => (
-              <button
-                key={df.id}
-                type="button"
-                onClick={() => setDateFilter(df.id as DateFilterType)}
-                className={`px-2 py-0.5 rounded-md text-[11px] font-semibold transition-colors ${
-                  dateFilter === df.id
-                    ? 'bg-slate-800 text-white'
-                    : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
-                }`}
-              >
-                {df.label}
-              </button>
-            ))}
-          </div>
+          {/* Reset Filters button */}
+          {(selectedAssignmentFilter !== 'all' ||
+            selectedClassFilter !== 'all' ||
+            selectedStudentFilter !== 'all' ||
+            startDateFilter ||
+            endDateFilter ||
+            searchQuery ||
+            performanceTierFilter !== 'all') && (
+            <button
+              type="button"
+              onClick={() => {
+                setSelectedAssignmentFilter('all');
+                setSelectedClassFilter('all');
+                setSelectedStudentFilter('all');
+                setStartDateFilter('');
+                setEndDateFilter('');
+                setDateFilter('all');
+                setPerformanceTierFilter('all');
+                setSearchQuery('');
+                setAttemptFilter('all');
+              }}
+              className="text-xs font-semibold text-rose-600 hover:text-rose-800 hover:underline flex items-center gap-1"
+            >
+              <RotateCcw className="w-3 h-3" />
+              <span>Xóa bộ lọc</span>
+            </button>
+          )}
         </div>
       </Card>
+      )}
 
       {/* 4. TAB CONTENTS */}
 
@@ -567,6 +833,25 @@ export const ResultsView: React.FC<ResultsViewProps> = ({
                                     <ChevronDown className="w-4 h-4" />
                                   )}
                                 </button>
+
+                                {onDeleteResult && (
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      if (
+                                        window.confirm(
+                                          `Bạn có chắc chắn muốn xóa bài làm của học sinh "${res.studentName}"? Dữ liệu và phân tích câu hỏi sẽ được tự động tính toán lại.`
+                                        )
+                                      ) {
+                                        onDeleteResult(res.id);
+                                      }
+                                    }}
+                                    className="p-1.5 rounded-lg text-rose-400 hover:text-rose-700 hover:bg-rose-50 transition-colors"
+                                    title="Xóa bài nộp này (Tự động tính lại phân tích)"
+                                  >
+                                    <Trash2 className="w-4 h-4" />
+                                  </button>
+                                )}
                               </div>
                             </td>
                           </tr>
@@ -685,9 +970,38 @@ export const ResultsView: React.FC<ResultsViewProps> = ({
         />
       )}
 
-      {/* TAB 3: QUESTION-LEVEL ITEM ANALYSIS */}
+      {/* TAB 3: QUESTION ERROR ANALYSIS & MATRIX (Prompt 17) */}
       {activeTab === 'question-analysis' && (
-        <QuestionAnalysisTab results={baseFilteredResults} />
+        <QuestionAnalysisTab
+          results={baseFilteredResults}
+          activities={activities}
+          questionSets={questionSets}
+          assignments={assignments}
+          selectedAssignmentId={selectedAssignmentFilter}
+        />
+      )}
+
+      {/* TAB 4: LEADERBOARD (Prompt 16) */}
+      {activeTab === 'leaderboard' && (
+        <LeaderboardTab
+          results={results}
+          assignments={assignments}
+          activities={activities}
+          availableClasses={uniqueClasses}
+          initialAssignmentFilter={selectedAssignmentFilter}
+          initialClassFilter={selectedClassFilter}
+          initialStartDate={startDateFilter}
+          initialEndDate={endDateFilter}
+          onSelectStudent={(stdName, stdClass) => {
+            const sum = studentSummaries.find(
+              (s) =>
+                s.studentName.trim().toLowerCase() === stdName.trim().toLowerCase() &&
+                s.studentClass.trim().toLowerCase() === stdClass.trim().toLowerCase()
+            );
+            if (sum) setSelectedStudentSummary(sum);
+          }}
+          onDeleteResult={onDeleteResult}
+        />
       )}
 
       {/* 5. MODALS & DRILL-DOWN VIEWS */}
@@ -696,6 +1010,7 @@ export const ResultsView: React.FC<ResultsViewProps> = ({
       {selectedStudentSummary && (
         <StudentDetailModal
           summary={selectedStudentSummary}
+          assignments={assignments}
           onClose={() => setSelectedStudentSummary(null)}
         />
       )}
@@ -709,6 +1024,14 @@ export const ResultsView: React.FC<ResultsViewProps> = ({
           activeAssignmentTitle={activeAssignmentTitle}
           activeClass={selectedClassFilter}
           onClose={() => setIsPrintModalOpen(false)}
+        />
+      )}
+
+      {/* Export Results Report Modal (Prompt 14) */}
+      {isExportReportModalOpen && (
+        <ExportReportModal
+          payload={reportPayload}
+          onClose={() => setIsExportReportModalOpen(false)}
         />
       )}
     </div>

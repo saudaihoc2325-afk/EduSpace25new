@@ -328,17 +328,17 @@ export const AnagramGame: React.FC<AnagramGameProps> = ({
         </div>
 
         {/* Prompt / Clue */}
-        <div className="p-4 bg-slate-950/90 border border-slate-800/80 rounded-2xl shadow-inner">
-          <span className="text-[10px] font-bold uppercase text-pink-400 block mb-1">Gợi ý / Định nghĩa (Clue):</span>
-          <h2 className="text-sm sm:text-base font-semibold text-white leading-relaxed font-display">
+        <div className="p-4 sm:p-5 bg-slate-950/90 border border-slate-800/80 rounded-2xl shadow-inner">
+          <span className="text-[11px] sm:text-xs font-bold uppercase text-pink-400 block mb-1">Gợi ý / Định nghĩa (Clue):</span>
+          <h2 className="font-fluid-question font-extrabold text-white leading-snug font-display tracking-tight">
             {currentQ.question}
           </h2>
         </div>
 
         {/* Target Word Placed Slots with 3D Depth */}
         <div className="space-y-2">
-          <span className="text-xs font-bold text-slate-300">Từ bạn ghép được:</span>
-          <div className="flex flex-wrap items-center justify-center gap-2.5 p-4 sm:p-5 bg-slate-950/95 border border-slate-800/90 rounded-2xl min-h-[80px] shadow-inner">
+          <span className="text-xs sm:text-sm font-extrabold text-slate-300">Từ bạn ghép được:</span>
+          <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-3 p-4 sm:p-6 bg-slate-950/95 border border-slate-800/90 rounded-2xl min-h-[85px] shadow-inner">
             {targetWord.split('').map((_, i) => {
               const placedTile = placedTiles[i];
               let tileStyle =
@@ -360,7 +360,7 @@ export const AnagramGame: React.FC<AnagramGameProps> = ({
                   type="button"
                   onClick={() => placedTile && handleTileClickInPlaced(placedTile, i)}
                   disabled={isAnswerChecked || !placedTile}
-                  className={`w-12 h-13 sm:w-14 sm:h-16 rounded-2xl border-2 flex items-center justify-center text-lg sm:text-2xl transition-all duration-150 cursor-pointer ${tileStyle}`}
+                  className={`w-11 h-13 sm:w-14 sm:h-16 md:w-16 md:h-18 rounded-2xl border-2 flex items-center justify-center text-xl sm:text-2xl md:text-3xl font-black transition-all duration-150 cursor-pointer active:scale-95 ${tileStyle}`}
                 >
                   {placedTile ? placedTile.char : ''}
                 </button>
@@ -371,14 +371,14 @@ export const AnagramGame: React.FC<AnagramGameProps> = ({
 
         {/* 3D Pushable Letter Pool Tiles */}
         <div className="space-y-2">
-          <span className="text-xs font-bold text-slate-300">Các chữ cái có sẵn (Bấm để xếp):</span>
-          <div className="flex flex-wrap items-center justify-center gap-3 p-4 sm:p-5 bg-slate-950/60 border border-slate-800/80 rounded-2xl">
+          <span className="text-xs sm:text-sm font-extrabold text-slate-300">Các chữ cái có sẵn (Chạm để ghép):</span>
+          <div className="flex flex-wrap items-center justify-center gap-2.5 sm:gap-3.5 p-4 sm:p-6 bg-slate-950/60 border border-slate-800/80 rounded-2xl">
             {poolTiles.map((tile) => {
               if (tile.isUsed) {
                 return (
                   <div
                     key={tile.id}
-                    className="w-12 h-13 sm:w-14 sm:h-16 rounded-2xl border-2 border-slate-800/60 bg-slate-950/30 opacity-15 pointer-events-none"
+                    className="w-11 h-13 sm:w-14 sm:h-16 md:w-16 md:h-18 rounded-2xl border-2 border-slate-800/60 bg-slate-950/30 opacity-15 pointer-events-none"
                   />
                 );
               }
@@ -389,7 +389,7 @@ export const AnagramGame: React.FC<AnagramGameProps> = ({
                   type="button"
                   onClick={() => handleTileClickInPool(tile)}
                   disabled={isAnswerChecked}
-                  className="w-12 h-13 sm:w-14 sm:h-16 rounded-2xl border-2 border-pink-500/50 bg-gradient-to-b from-slate-800 to-slate-900 hover:from-pink-950 hover:to-slate-900 hover:border-pink-400 text-white font-black text-lg sm:text-2xl shadow-[0_4px_0_rgba(15,23,42,0.9),0_0_12px_rgba(236,72,153,0.3)] active:translate-y-1 active:shadow-[0_1px_0_rgba(15,23,42,0.9)] transition-all cursor-pointer"
+                  className="w-11 h-13 sm:w-14 sm:h-16 md:w-16 md:h-18 rounded-2xl border-2 border-pink-500/50 bg-gradient-to-b from-slate-800 to-slate-900 hover:from-pink-950 hover:to-slate-900 hover:border-pink-400 text-white font-black text-xl sm:text-2xl md:text-3xl shadow-[0_4px_0_rgba(15,23,42,0.9),0_0_12px_rgba(236,72,153,0.3)] active:translate-y-1 active:shadow-[0_1px_0_rgba(15,23,42,0.9)] transition-all cursor-pointer"
                 >
                   {tile.char}
                 </button>

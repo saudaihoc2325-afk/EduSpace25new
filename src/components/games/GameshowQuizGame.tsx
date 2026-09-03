@@ -364,19 +364,19 @@ export const GameshowQuizGame: React.FC<GameshowQuizGameProps> = ({
           </div>
         )}
 
-        <h2 className="text-base sm:text-lg md:text-xl font-extrabold text-white text-center leading-relaxed py-2 font-display">
+        <h2 className="font-fluid-question font-extrabold text-white text-center leading-snug py-2 font-display tracking-tight">
           {currentQ?.question}
         </h2>
 
         {/* Dynamic 3D Neon Options Grid (A, B, C, D, E, F...) */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
           {currentQ?.options.map((opt, optIdx) => {
             const isHidden = hiddenOptionIds.includes(opt.id);
             if (isHidden) {
               return (
                 <div
                   key={opt.id}
-                  className="p-4 rounded-2xl border border-slate-850 bg-slate-950/20 opacity-10 pointer-events-none"
+                  className="min-h-[3.75rem] sm:min-h-[4.25rem] p-3.5 sm:p-4 rounded-2xl border border-slate-850 bg-slate-950/20 opacity-10 pointer-events-none"
                 />
               );
             }
@@ -400,22 +400,22 @@ export const GameshowQuizGame: React.FC<GameshowQuizGameProps> = ({
                 type="button"
                 onClick={(e) => handleSelectOption(opt.id, e)}
                 disabled={isAnswered}
-                className={`p-4 rounded-2xl border text-left flex items-center justify-between gap-3 transition-all duration-200 cursor-pointer ${cardClasses}`}
+                className={`min-h-[3.75rem] sm:min-h-[4.25rem] p-3.5 sm:p-4 rounded-2xl border text-left flex items-center justify-between gap-3.5 transition-all duration-200 cursor-pointer active:scale-[0.99] ${cardClasses}`}
               >
-                <div className="flex items-center gap-3 min-w-0">
-                  <span className={`w-8 h-8 rounded-xl text-xs flex items-center justify-center shrink-0 border ${badgeClasses}`}>
+                <div className="flex items-center gap-3 sm:gap-3.5 min-w-0 flex-1">
+                  <span className={`touch-target-badge rounded-xl sm:rounded-2xl flex items-center justify-center shrink-0 border font-black ${badgeClasses}`}>
                     {opt.label || String.fromCharCode(65 + optIdx)}
                   </span>
-                  <span className="text-xs sm:text-sm font-semibold text-slate-100 break-words">{opt.text}</span>
+                  <span className="font-fluid-option font-bold text-slate-100 break-words flex-1 leading-snug">{opt.text}</span>
                 </div>
                 {isAnswered && isCorrect && (
-                  <div className="shrink-0 flex items-center justify-center w-7 h-7 rounded-xl bg-emerald-500/20 border border-emerald-400/60 shadow-[0_0_10px_rgba(52,211,153,0.6)]">
-                    <CheckCircle2 className="w-4.5 h-4.5 text-emerald-300" />
+                  <div className="shrink-0 flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-emerald-500/20 border border-emerald-400/60 shadow-[0_0_10px_rgba(52,211,153,0.6)]">
+                    <CheckCircle2 className="w-5 h-5 sm:w-5.5 sm:h-5.5 text-emerald-300" />
                   </div>
                 )}
                 {isAnswered && isSelected && !isCorrect && (
-                  <div className="shrink-0 flex items-center justify-center w-7 h-7 rounded-xl bg-rose-500/20 border border-rose-400/60 shadow-[0_0_10px_rgba(244,63,94,0.6)]">
-                    <XCircle className="w-4.5 h-4.5 text-rose-300" />
+                  <div className="shrink-0 flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-rose-500/20 border border-rose-400/60 shadow-[0_0_10px_rgba(244,63,94,0.6)]">
+                    <XCircle className="w-5 h-5 sm:w-5.5 sm:h-5.5 text-rose-300" />
                   </div>
                 )}
               </button>

@@ -7,6 +7,7 @@ import { OpenTheBoxGame } from './OpenTheBoxGame';
 import { AnagramGame } from './AnagramGame';
 import { GameshowQuizGame } from './GameshowQuizGame';
 import { CompleteSentenceGame } from './CompleteSentenceGame';
+import { SkyCloudsQuizGame } from './SkyCloudsQuizGame';
 import { FireworksCanvas } from '../effects/FireworksCanvas';
 
 interface GameSessionRunnerProps {
@@ -141,6 +142,17 @@ export const GameSessionRunner: React.FC<GameSessionRunnerProps> = ({
       case 'complete_sentence':
         return (
           <CompleteSentenceGame
+            title={title}
+            questions={activeQuestions}
+            settings={settings}
+            onFinish={onFinish}
+            onExit={onExit}
+            isPreview={isPreview}
+          />
+        );
+      case 'sky_clouds':
+        return (
+          <SkyCloudsQuizGame
             title={title}
             questions={activeQuestions}
             settings={settings}

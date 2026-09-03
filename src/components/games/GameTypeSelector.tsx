@@ -7,6 +7,7 @@ import {
   KeyRound,
   Trophy,
   FileText,
+  Cloud,
   CheckCircle2,
   Sparkles,
 } from 'lucide-react';
@@ -40,6 +41,8 @@ export const GameTypeSelector: React.FC<GameTypeSelectorProps> = ({
         return <Trophy className="w-5 h-5 text-rose-400" />;
       case 'complete_sentence':
         return <FileText className="w-5 h-5 text-cyan-400" />;
+      case 'sky_clouds':
+        return <Cloud className="w-5 h-5 text-sky-400" />;
       default:
         return <HelpCircle className="w-5 h-5 text-indigo-400" />;
     }

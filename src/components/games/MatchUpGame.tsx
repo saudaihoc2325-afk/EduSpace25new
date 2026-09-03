@@ -291,7 +291,7 @@ export const MatchUpGame: React.FC<MatchUpGameProps> = ({
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
         {/* Left Column: Questions / Prompts */}
         <div className="space-y-3">
-          <span className="text-xs font-extrabold text-slate-300 uppercase tracking-wider block px-1">
+          <span className="text-xs sm:text-sm font-extrabold text-slate-300 uppercase tracking-wider block px-1">
             Cột Câu hỏi & Đề mục ({leftPrompts.length})
           </span>
           {leftPrompts.map((p) => {
@@ -323,9 +323,9 @@ export const MatchUpGame: React.FC<MatchUpGameProps> = ({
                   setSelectedPromptId(p.id);
                 }}
                 disabled={isMatched}
-                className={`w-full p-4 rounded-2xl border text-left flex items-center justify-between gap-3 transition-all duration-150 ${cardStyle}`}
+                className={`w-full min-h-[3.5rem] sm:min-h-[4rem] p-4 rounded-2xl border text-left flex items-center justify-between gap-3.5 transition-all duration-150 active:scale-[0.99] ${cardStyle}`}
               >
-                <span className="text-xs sm:text-sm font-semibold leading-relaxed">
+                <span className="font-fluid-option font-bold leading-snug break-words flex-1">
                   {p.promptText}
                 </span>
                 {isMatched && <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0" />}
@@ -336,7 +336,7 @@ export const MatchUpGame: React.FC<MatchUpGameProps> = ({
 
         {/* Right Column: Answers / Definitions */}
         <div className="space-y-3">
-          <span className="text-xs font-extrabold text-slate-300 uppercase tracking-wider block px-1">
+          <span className="text-xs sm:text-sm font-extrabold text-slate-300 uppercase tracking-wider block px-1">
             Cột Câu trả lời & Định nghĩa ({rightAnswers.length})
           </span>
           {rightAnswers.map((a) => {
@@ -368,9 +368,9 @@ export const MatchUpGame: React.FC<MatchUpGameProps> = ({
                   setSelectedAnswerId(a.id);
                 }}
                 disabled={isMatched}
-                className={`w-full p-4 rounded-2xl border text-left flex items-center justify-between gap-3 transition-all duration-150 ${cardStyle}`}
+                className={`w-full min-h-[3.5rem] sm:min-h-[4rem] p-4 rounded-2xl border text-left flex items-center justify-between gap-3.5 transition-all duration-150 active:scale-[0.99] ${cardStyle}`}
               >
-                <span className="text-xs sm:text-sm font-semibold leading-relaxed">
+                <span className="font-fluid-option font-bold leading-snug break-words flex-1">
                   {a.answerText}
                 </span>
                 {isMatched && <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0" />}

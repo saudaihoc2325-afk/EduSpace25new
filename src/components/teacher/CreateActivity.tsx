@@ -451,18 +451,18 @@ export const CreateActivity: React.FC<CreateActivityProps> = ({
           <div>
             <h2 className="text-sm font-bold uppercase tracking-wider text-slate-700 flex items-center gap-2">
               <Sparkles className="w-4 h-4 text-indigo-600" />
-              Choose 1 of 7 Interactive Game Types
+              Choose 1 of 8 Interactive Game Types
             </h2>
             <p className="text-xs text-slate-500">
               Select any game type. The original Question Set remains intact as the master source of truth.
             </p>
           </div>
           <span className="text-xs text-indigo-600 font-semibold bg-indigo-50 px-2.5 py-1 rounded-full border border-indigo-100">
-            7 Interactive Engines Ready
+            8 Interactive Engines Ready
           </span>
         </div>
 
-        {/* 7 Game Type Selector Cards */}
+        {/* 8 Game Type Selector Cards */}
         <GameTypeSelector
           selectedType={selectedGameType}
           onSelectType={(type) => setSelectedGameType(type)}

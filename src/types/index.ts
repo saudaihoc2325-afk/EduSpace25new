@@ -19,7 +19,8 @@ export type GameType =
   | 'open_box'
   | 'anagram'
   | 'gameshow_quiz'
-  | 'complete_sentence';
+  | 'complete_sentence'
+  | 'sky_clouds';
 
 export interface GameTypeMeta {
   type: GameType;
@@ -52,7 +53,11 @@ export interface QuestionItem {
   passage?: string | null;
   unit?: string;
   lesson?: string;
+  topic?: string;
+  skill?: string;
   level?: string;
+  difficulty?: string;
+  cognitiveLevel?: string;
   questionType?: string;
   sourceFileName?: string;
   sourceFileType?: 'docx' | 'pdf' | 'xlsx' | 'csv' | 'manual';

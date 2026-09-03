@@ -85,57 +85,57 @@ export const GameCompletionScreen: React.FC<GameCompletionScreenProps> = ({
 
           <div>
             <div className="flex items-center justify-center gap-2 mb-2 flex-wrap">
-              <span className={`px-4 py-1 rounded-full text-xs font-black border ${badgeStyle}`}>
+              <span className={`px-4 py-1.5 rounded-full text-xs sm:text-sm font-black border ${badgeStyle}`}>
                 {ratingText}
               </span>
               {isPreview && (
-                <span className="px-3.5 py-1 rounded-full text-xs font-bold bg-amber-500/20 text-amber-300 border border-amber-500/40 shadow-[0_0_10px_rgba(245,158,11,0.3)]">
+                <span className="px-3.5 py-1.5 rounded-full text-xs font-bold bg-amber-500/20 text-amber-300 border border-amber-500/40 shadow-[0_0_10px_rgba(245,158,11,0.3)]">
                   Chế độ xem trước (Teacher Preview)
                 </span>
               )}
             </div>
-            <h2 className="text-2xl sm:text-3xl font-extrabold text-white font-display tracking-tight">
+            <h2 className="font-fluid-question font-extrabold text-white font-display tracking-tight leading-snug">
               {title}
             </h2>
-            <p className="text-xs text-slate-300 mt-1.5 font-medium">
+            <p className="text-xs sm:text-sm text-slate-300 mt-2 font-medium">
               Định dạng: <span className="text-indigo-400 font-bold">{gameTypeLabel}</span> • Thời gian: <span className="font-mono text-slate-200">{gameScoringService.formatTime(timeSpentSeconds)}</span>
             </p>
           </div>
 
           {/* 3D Metric Stats Bento Grid */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            <div className="p-4 rounded-2xl bg-slate-950/90 border border-slate-800 shadow-[0_4px_0_rgba(15,23,42,0.8),inset_0_1px_1px_rgba(255,255,255,0.08)]">
+            <div className="p-3.5 sm:p-4 rounded-2xl bg-slate-950/90 border border-slate-800 shadow-[0_4px_0_rgba(15,23,42,0.8),inset_0_1px_1px_rgba(255,255,255,0.08)]">
               <div className="flex items-center justify-center text-indigo-400 mb-1">
                 <Trophy className="w-4 h-4 mr-1" />
-                <span className="text-[11px] font-bold text-slate-400">Tổng điểm</span>
+                <span className="text-xs font-bold text-slate-400">Tổng điểm</span>
               </div>
-              <p className="text-2xl font-black text-white font-mono">{score}</p>
+              <p className="text-xl sm:text-2xl font-black text-white font-mono">{score}</p>
             </div>
 
-            <div className="p-4 rounded-2xl bg-slate-950/90 border border-slate-800 shadow-[0_4px_0_rgba(15,23,42,0.8),inset_0_1px_1px_rgba(255,255,255,0.08)]">
+            <div className="p-3.5 sm:p-4 rounded-2xl bg-slate-950/90 border border-slate-800 shadow-[0_4px_0_rgba(15,23,42,0.8),inset_0_1px_1px_rgba(255,255,255,0.08)]">
               <div className="flex items-center justify-center text-emerald-400 mb-1">
                 <CheckCircle2 className="w-4 h-4 mr-1" />
-                <span className="text-[11px] font-bold text-slate-400">Số câu đúng</span>
+                <span className="text-xs font-bold text-slate-400">Số câu đúng</span>
               </div>
-              <p className="text-2xl font-black text-emerald-400 font-mono">
+              <p className="text-xl sm:text-2xl font-black text-emerald-400 font-mono">
                 {correctCount} / {totalQuestions}
               </p>
             </div>
 
-            <div className="p-4 rounded-2xl bg-slate-950/90 border border-slate-800 shadow-[0_4px_0_rgba(15,23,42,0.8),inset_0_1px_1px_rgba(255,255,255,0.08)]">
+            <div className="p-3.5 sm:p-4 rounded-2xl bg-slate-950/90 border border-slate-800 shadow-[0_4px_0_rgba(15,23,42,0.8),inset_0_1px_1px_rgba(255,255,255,0.08)]">
               <div className="flex items-center justify-center text-sky-400 mb-1">
                 <Percent className="w-4 h-4 mr-1" />
-                <span className="text-[11px] font-bold text-slate-400">Độ chính xác</span>
+                <span className="text-xs font-bold text-slate-400">Độ chính xác</span>
               </div>
-              <p className="text-2xl font-black text-sky-400 font-mono">{percentage}%</p>
+              <p className="text-xl sm:text-2xl font-black text-sky-400 font-mono">{percentage}%</p>
             </div>
 
-            <div className="p-4 rounded-2xl bg-slate-950/90 border border-slate-800 shadow-[0_4px_0_rgba(15,23,42,0.8),inset_0_1px_1px_rgba(255,255,255,0.08)]">
+            <div className="p-3.5 sm:p-4 rounded-2xl bg-slate-950/90 border border-slate-800 shadow-[0_4px_0_rgba(15,23,42,0.8),inset_0_1px_1px_rgba(255,255,255,0.08)]">
               <div className="flex items-center justify-center text-amber-400 mb-1">
                 <Clock className="w-4 h-4 mr-1" />
-                <span className="text-[11px] font-bold text-slate-400">Thời gian</span>
+                <span className="text-xs font-bold text-slate-400">Thời gian</span>
               </div>
-              <p className="text-2xl font-black text-white font-mono">
+              <p className="text-xl sm:text-2xl font-black text-white font-mono">
                 {gameScoringService.formatTime(timeSpentSeconds)}
               </p>
             </div>
@@ -147,7 +147,7 @@ export const GameCompletionScreen: React.FC<GameCompletionScreenProps> = ({
               <button
                 type="button"
                 onClick={onReviewAnswers}
-                className="px-5 py-2.5 text-xs font-bold text-slate-200 bg-slate-850 hover:bg-slate-800 hover:text-white rounded-xl border border-slate-700 shadow-[0_3px_0_rgba(15,23,42,0.8)] active:translate-y-0.5 flex items-center gap-2 transition-all cursor-pointer"
+                className="px-5 py-3 text-xs sm:text-sm font-bold text-slate-200 bg-slate-850 hover:bg-slate-800 hover:text-white rounded-xl border border-slate-700 shadow-[0_3px_0_rgba(15,23,42,0.8)] active:translate-y-0.5 flex items-center gap-2 transition-all cursor-pointer"
               >
                 <BookOpen className="w-4 h-4 text-indigo-400" />
                 Xem lại bài làm ({answers.length})
@@ -157,7 +157,7 @@ export const GameCompletionScreen: React.FC<GameCompletionScreenProps> = ({
             <button
               type="button"
               onClick={onPlayAgain}
-              className="px-6 py-2.5 text-xs font-black text-white bg-gradient-to-r from-indigo-600 via-indigo-500 to-purple-600 hover:from-indigo-500 hover:to-purple-500 rounded-xl shadow-[0_4px_0_rgba(67,56,202,0.8),0_0_20px_rgba(99,102,241,0.4)] active:translate-y-1 active:shadow-[0_1px_0_rgba(67,56,202,0.8)] flex items-center gap-2 transition-all cursor-pointer"
+              className="px-6 py-3 text-xs sm:text-sm font-black text-white bg-gradient-to-r from-indigo-600 via-indigo-500 to-purple-600 hover:from-indigo-500 hover:to-purple-500 rounded-xl shadow-[0_4px_0_rgba(67,56,202,0.8),0_0_20px_rgba(99,102,241,0.4)] active:translate-y-1 active:shadow-[0_1px_0_rgba(67,56,202,0.8)] flex items-center gap-2 transition-all cursor-pointer"
             >
               <RotateCcw className="w-4 h-4" />
               Chơi lại lần nữa
@@ -167,7 +167,7 @@ export const GameCompletionScreen: React.FC<GameCompletionScreenProps> = ({
               <button
                 type="button"
                 onClick={onExit}
-                className="px-5 py-2.5 text-xs font-bold text-slate-400 hover:text-white hover:bg-slate-800 rounded-xl transition-all cursor-pointer"
+                className="px-5 py-3 text-xs sm:text-sm font-bold text-slate-400 hover:text-white hover:bg-slate-800 rounded-xl transition-all cursor-pointer"
               >
                 Thoát
               </button>

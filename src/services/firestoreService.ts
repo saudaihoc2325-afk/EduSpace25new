@@ -317,7 +317,11 @@ export const questionSetService = {
       passage: q.passage || null,
       unit: q.unit || '',
       lesson: q.lesson || '',
-      level: q.level || 'Medium',
+      topic: q.topic || q.lesson || '',
+      skill: q.skill || '',
+      difficulty: q.difficulty || q.level || '',
+      cognitiveLevel: q.cognitiveLevel || '',
+      level: q.difficulty || q.level || 'Medium',
       questionType: (q.questionType as any) || 'multiple_choice',
       sourceFileName: q.sourceFileName || data.sourceFileName || '',
       sourceFileType: (q.sourceFileType || data.sourceFileType || 'manual') as any,
@@ -1294,6 +1298,48 @@ export const resultService = {
     }
   },
 
+  async getResultsByAssignment(assignmentId: string): Promise<StudentResult[]> {
+    if (!assignmentId) return [];
+    try {
+      const q = query(
+        collection(db, 'results'),
+        where('assignmentId', '==', assignmentId)
+      );
+      const snap = await getDocs(q);
+      const results: StudentResult[] = [];
+      snap.forEach((docSnap) => {
+        const data = docSnap.data();
+        results.push({
+          id: docSnap.id,
+          attemptId: data.attemptId || docSnap.id,
+          attemptNumber: data.attemptNumber || 1,
+          assignmentId: data.assignmentId,
+          activityId: data.activityId,
+          questionSetId: data.questionSetId || '',
+          assignmentCode: String(data.assignmentCode || ''),
+          activityTitle: data.activityTitle,
+          teacherOwnerId: data.teacherOwnerId,
+          studentName: data.studentName || '',
+          studentClass: data.studentClass || '',
+          studentId: data.studentId,
+          score: typeof data.score === 'number' ? data.score : 0,
+          totalQuestions: typeof data.totalQuestions === 'number' ? data.totalQuestions : 0,
+          correctCount: typeof data.correctCount === 'number' ? data.correctCount : data.score || 0,
+          percentage: typeof data.percentage === 'number' ? data.percentage : 0,
+          answers: data.answers || [],
+          startTime: toISO(data.startTime),
+          timeSpentSeconds: typeof data.timeSpentSeconds === 'number' ? data.timeSpentSeconds : 0,
+          completedAt: toISO(data.completedAt) || new Date().toISOString(),
+          createdAt: toISO(data.createdAt) || new Date().toISOString(),
+        });
+      });
+      return results.sort((a, b) => new Date(b.completedAt).getTime() - new Date(a.completedAt).getTime());
+    } catch (e) {
+      console.warn('Error fetching results by assignment for leaderboard:', e);
+      return [];
+    }
+  },
+
   async submitStudentResult(data: {
     attemptId?: string;
     attemptNumber?: number;
@@ -1446,6 +1492,16 @@ export const resultService = {
       timeSpentSeconds: data.timeSpentSeconds,
       createdAt: now,
     };
+  },
+
+  async deleteResult(id: string): Promise<void> {
+    if (!id) return;
+    try {
+      await deleteDoc(doc(db, 'results', id));
+    } catch (e) {
+      console.warn('Error deleting result document:', e);
+      throw e;
+    }
   },
 
   subscribeStudents(ownerId: string, onUpdate: (students: StudentProfile[]) => void, onError?: (err: Error) => void) {
